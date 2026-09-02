@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="ko">
 <head>
@@ -22,14 +23,9 @@
   header h1{ font-size:20px; margin:0 0 4px; color:var(--teal-900); }
   header p{ margin:0; color:var(--ink-soft); font-size:12.5px; }
   .refresh-area{ text-align:right; }
-  .refresh-btn{
-    border:none; background:var(--teal-700); color:white; border-radius:8px;
-    padding:9px 16px; font-size:13px; font-weight:600; cursor:pointer;
-  }
-  .refresh-btn:hover{ opacity:.9; }
-  .refresh-btn:disabled{ background:#c7d2d5; cursor:default; }
   .ts{ font-size:11.5px; color:var(--ink-soft); margin-top:6px; line-height:1.5; }
   .ts b{ color:var(--teal-700); }
+  .table-note{ font-size:11px; color:var(--ink-soft); margin-top:8px; }
 
   .card{
     background:var(--paper); border:1px solid var(--line); border-radius:14px;
@@ -67,7 +63,6 @@
       <p>다나와 정품 · 병행수입 용량별 단가 · 매일 자동 수집</p>
     </div>
     <div class="refresh-area">
-      <button class="refresh-btn" id="refreshBtn">🔄 새로고침</button>
       <div class="ts" id="tsBox">불러오는 중...</div>
     </div>
   </header>
@@ -78,7 +73,7 @@
   </div>
 
   <div class="card">
-    <h2>가격 추이 (원/GB)</h2>
+    <h2>가격 추이 (부가세포함)</h2>
     <div class="chart-controls">
       <label>용량</label>
       <select id="capacitySelect"></select>
@@ -93,6 +88,7 @@ let historyData = null;
 let trendChart = null;
 
 function fmtWon(n){ return n.toLocaleString('ko-KR') + '원'; }
+function exclVat(n){ return Math.round(n / 1.1); }
 
 function capacitySortKey(cap){
   const m = cap.match(/(\d+(?:\.\d+)?)\s*(TB|GB)/i);
@@ -115,8 +111,7 @@ async function loadData(bust){
 
 function renderTimestamp(latest){
   const box = document.getElementById('tsBox');
-  const checked = new Date().toLocaleString('ko-KR', {hour12:false});
-  box.innerHTML = `크롤링 시각: <b>${latest.updated_at_display || '-'}</b><br>마지막 확인: <b>${checked}</b>`;
+  box.innerHTML = `크롤링 시각: <b>${latest.updated_at_display || '-'}</b>`;
 }
 
 function renderTable(latest){
@@ -131,21 +126,20 @@ function renderTable(latest){
 
   const rows = sorted.map(it=>{
     const tagClass = it.source_type === '병행수입' ? 'parallel' : 'genuine';
-    const unitPrice = it.price_per_gb_krw ? fmtWon(it.price_per_gb_krw) + '/GB' : '-';
     return `<tr>
       <td><span class="tag ${tagClass}">${it.source_type}</span></td>
       <td>${it.capacity}</td>
       <td>${fmtWon(it.price_krw)}</td>
-      <td>${unitPrice}</td>
-      <td class="left"><a href="${it.url}" target="_blank" rel="noopener">다나와 링크</a></td>
+      <td>${fmtWon(exclVat(it.price_krw))}</td>
     </tr>`;
   }).join('');
 
   el.innerHTML = `
     <table>
-      <thead><tr><th>구분</th><th>용량</th><th>가격</th><th>단가</th><th></th></tr></thead>
+      <thead><tr><th>구분</th><th>용량</th><th>가격(부가세포함)</th><th>가격(부가세별도, 추정)</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
+    <p class="table-note">※ 부가세별도 금액은 크롤링되는 부가세포함 가격을 기준으로 계산한 추정값입니다 (÷1.1, 반올림).</p>
   `;
 }
 
@@ -164,7 +158,7 @@ function renderTrendChart(history, capacity){
 
   const seriesFor = (sourceType) => entries.map(e=>{
     const item = (e.items||[]).find(it => it.capacity === capacity && it.source_type === sourceType);
-    return item ? item.price_per_gb_krw : null;
+    return item ? item.price_krw : null;
   });
 
   const datasets = ['정품(리테일)','병행수입'].map(st => ({
@@ -183,16 +177,14 @@ function renderTrendChart(history, capacity){
     options: {
       responsive: true,
       plugins: { legend: { position:'bottom' } },
-      scales: { y: { ticks: { callback: v => v.toLocaleString('ko-KR') } } }
+      scales: { y: { ticks: { callback: v => v.toLocaleString('ko-KR') + '원' } } }
     }
   });
 }
 
-async function refresh(bust){
-  const btn = document.getElementById('refreshBtn');
-  btn.disabled = true;
+async function loadAndRender(){
   try{
-    const {latest, history} = await loadData(bust);
+    const {latest, history} = await loadData(false);
     historyData = history;
     renderTimestamp(latest);
     renderTable(latest);
@@ -200,17 +192,14 @@ async function refresh(bust){
     renderTrendChart(history, document.getElementById('capacitySelect').value);
   }catch(err){
     document.getElementById('tableArea').innerHTML = `<div class="error">데이터를 불러오지 못했습니다: ${err.message}</div>`;
-  }finally{
-    btn.disabled = false;
   }
 }
 
-document.getElementById('refreshBtn').addEventListener('click', ()=> refresh(true));
 document.getElementById('capacitySelect').addEventListener('change', (e)=>{
   if(historyData) renderTrendChart(historyData, e.target.value);
 });
 
-refresh(false);
+loadAndRender();
 </script>
 </body>
 </html>
