@@ -1,102 +1,102 @@
 {
-  "updated_at": "2026-09-01T09:00:00+09:00",
-  "updated_at_display": "2026-09-01 09:00 (예시 데이터)",
+  "updated_at": "2026-09-02T15:39:26.505798+09:00",
+  "updated_at_display": "2026-09-02 15:39",
   "items": [
     {
+      "source_type": "병행수입",
       "capacity": "250GB",
-      "price_krw": 218960,
-      "price_per_gb_krw": 876,
-      "source_type": "정품(리테일)",
-      "pcode": "10000",
-      "url": "https://prod.danawa.com/info/?pcode=10000&cate=112760"
+      "price_krw": 212980,
+      "price_per_gb_krw": 852,
+      "pcode": "13349057",
+      "url": "https://prod.danawa.com/info/?pcode=13349057&cate=112760"
     },
     {
+      "source_type": "병행수입",
       "capacity": "500GB",
-      "price_krw": 320850,
-      "price_per_gb_krw": 642,
-      "source_type": "정품(리테일)",
-      "pcode": "10001",
-      "url": "https://prod.danawa.com/info/?pcode=10001&cate=112760"
+      "price_krw": 298970,
+      "price_per_gb_krw": 598,
+      "pcode": "13312010",
+      "url": "https://prod.danawa.com/info/?pcode=13312010&cate=112760"
     },
     {
+      "source_type": "병행수입",
       "capacity": "1TB",
-      "price_krw": 441900,
-      "price_per_gb_krw": 442,
-      "source_type": "정품(리테일)",
-      "pcode": "10002",
-      "url": "https://prod.danawa.com/info/?pcode=10002&cate=112760"
+      "price_krw": 445310,
+      "price_per_gb_krw": 445,
+      "pcode": "13311974",
+      "url": "https://prod.danawa.com/info/?pcode=13311974&cate=112760"
     },
     {
+      "source_type": "병행수입",
       "capacity": "2TB",
-      "price_krw": 1162300,
-      "price_per_gb_krw": 581,
-      "source_type": "정품(리테일)",
-      "pcode": "10003",
-      "url": "https://prod.danawa.com/info/?pcode=10003&cate=112760"
+      "price_krw": 1078990,
+      "price_per_gb_krw": 539,
+      "pcode": "13417007",
+      "url": "https://prod.danawa.com/info/?pcode=13417007&cate=112760"
     },
     {
+      "source_type": "병행수입",
       "capacity": "4TB",
-      "price_krw": 2018910,
-      "price_per_gb_krw": 505,
-      "source_type": "정품(리테일)",
-      "pcode": "10004",
-      "url": "https://prod.danawa.com/info/?pcode=10004&cate=112760"
+      "price_krw": 1889900,
+      "price_per_gb_krw": 472,
+      "pcode": "13860719",
+      "url": "https://prod.danawa.com/info/?pcode=13860719&cate=112760"
     },
     {
+      "source_type": "병행수입",
       "capacity": "8TB",
-      "price_krw": 4853990,
-      "price_per_gb_krw": 607,
-      "source_type": "정품(리테일)",
-      "pcode": "10005",
-      "url": "https://prod.danawa.com/info/?pcode=10005&cate=112760"
+      "price_krw": 4024200,
+      "price_per_gb_krw": 503,
+      "pcode": "122692996",
+      "url": "https://prod.danawa.com/info/?pcode=122692996&cate=112760"
     },
     {
+      "source_type": "정품(리테일)",
       "capacity": "250GB",
-      "price_krw": 216530,
-      "price_per_gb_krw": 866,
-      "source_type": "병행수입",
-      "pcode": "20000",
-      "url": "https://prod.danawa.com/info/?pcode=20000&cate=112760"
+      "price_krw": 218000,
+      "price_per_gb_krw": 872,
+      "pcode": "13190384",
+      "url": "https://prod.danawa.com/info/?pcode=13190384&cate=112760"
     },
     {
+      "source_type": "정품(리테일)",
       "capacity": "500GB",
-      "price_krw": 307800,
-      "price_per_gb_krw": 616,
-      "source_type": "병행수입",
-      "pcode": "20001",
-      "url": "https://prod.danawa.com/info/?pcode=20001&cate=112760"
+      "price_krw": 312990,
+      "price_per_gb_krw": 626,
+      "pcode": "13190519",
+      "url": "https://prod.danawa.com/info/?pcode=13190519&cate=112760"
     },
     {
+      "source_type": "정품(리테일)",
       "capacity": "1TB",
-      "price_krw": 443990,
-      "price_per_gb_krw": 444,
-      "source_type": "병행수입",
-      "pcode": "20002",
-      "url": "https://prod.danawa.com/info/?pcode=20002&cate=112760"
+      "price_krw": 419990,
+      "price_per_gb_krw": 420,
+      "pcode": "13190573",
+      "url": "https://prod.danawa.com/info/?pcode=13190573&cate=112760"
     },
     {
+      "source_type": "정품(리테일)",
       "capacity": "2TB",
-      "price_krw": 1080000,
-      "price_per_gb_krw": 540,
-      "source_type": "병행수입",
-      "pcode": "20003",
-      "url": "https://prod.danawa.com/info/?pcode=20003&cate=112760"
+      "price_krw": 1066960,
+      "price_per_gb_krw": 533,
+      "pcode": "13190630",
+      "url": "https://prod.danawa.com/info/?pcode=13190630&cate=112760"
     },
     {
+      "source_type": "정품(리테일)",
       "capacity": "4TB",
-      "price_krw": 1890000,
-      "price_per_gb_krw": 473,
-      "source_type": "병행수입",
-      "pcode": "20004",
-      "url": "https://prod.danawa.com/info/?pcode=20004&cate=112760"
+      "price_krw": 1932970,
+      "price_per_gb_krw": 483,
+      "pcode": "13190711",
+      "url": "https://prod.danawa.com/info/?pcode=13190711&cate=112760"
     },
     {
+      "source_type": "정품(리테일)",
       "capacity": "8TB",
-      "price_krw": 4119990,
-      "price_per_gb_krw": 515,
-      "source_type": "병행수입",
-      "pcode": "20005",
-      "url": "https://prod.danawa.com/info/?pcode=20005&cate=112760"
+      "price_krw": 4850770,
+      "price_per_gb_krw": 606,
+      "pcode": "106736903",
+      "url": "https://prod.danawa.com/info/?pcode=106736903&cate=112760"
     }
   ]
 }
