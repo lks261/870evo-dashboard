@@ -23,8 +23,11 @@ jobs:
       - name: 라이브러리 설치
         run: pip install requests beautifulsoup4
 
-      - name: 크롤링 실행
+      - name: 다나와 크롤링 실행
         run: python scripts/scrape_870evo.py
+
+      - name: 컴퓨존 크롤링 실행
+        run: python scripts/scrape_compuzone.py
 
       - name: 결과 커밋 & 푸시
         run: |
