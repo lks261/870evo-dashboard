@@ -22,6 +22,7 @@
 import re
 import sys
 import os
+import time
 
 import requests
 from bs4 import BeautifulSoup
@@ -32,10 +33,14 @@ from common import merge_and_save, capacity_sort_key, CAPACITY_ORDER
 SITE = "컴퓨존"
 SOURCE_TYPE = "정품"  # 컴퓨존은 이 라인업(공식인증 정품)만 수집 대상
 
-# 이 라인업(공식인증 870 EVO SATA)의 대표 상품 페이지.
-# 하단 "다른 옵션을 선택하세요" 목록에 250GB~8TB 전체가 노출된다.
 REP_PRODUCT_NO = 755257  # [1TB] 공식인증 870 EVO SATA
-PRODUCT_DETAIL_URL = f"https://www.compuzone.co.kr/product/product_detail.htm?ProductNo={REP_PRODUCT_NO}"
+
+# 데스크톱이 막힐 경우를 대비해 모바일 서브도메인도 순서대로 시도한다
+CANDIDATE_URLS = [
+    f"https://www.compuzone.co.kr/product/product_detail.htm?ProductNo={REP_PRODUCT_NO}",
+    f"https://m.compuzone.co.kr/product/product_detail.htm?ProductNo={REP_PRODUCT_NO}",
+]
+PRODUCT_DETAIL_URL = CANDIDATE_URLS[0]  # 대시보드 링크 표기용 기본값
 
 REQUIRED_TITLE_KEYWORDS = ["870 EVO", "공식인증"]
 
@@ -49,16 +54,30 @@ HEADERS = {
 }
 
 VALID_CAPACITIES = set(CAPACITY_ORDER.keys())
-# "[250GB] 250,000원" 같은 옵션 목록 항목 패턴. 대괄호/숫자/쉼표는 인코딩과
-# 무관하게(ASCII라서) 안정적으로 잡히므로, 페이지 인코딩이 깨져도 이 부분만은 견고하다.
 OPTION_PATTERN = re.compile(r"\[\s*(\d+(?:\.\d+)?\s*(?:GB|TB))\s*\]\s*([\d,]+)\s*원")
 
 
 def fetch_product_page() -> str:
-    resp = requests.get(PRODUCT_DETAIL_URL, headers=HEADERS, timeout=15)
-    resp.raise_for_status()
-    resp.encoding = "euc-kr"  # 컴퓨존은 euc-kr 인코딩을 사용
-    return resp.text
+    """데스크톱 URL을 먼저 시도하고, 실패하면 모바일 URL로 넘어간다.
+    (컴퓨존이 GitHub Actions 같은 해외 데이터센터 IP를 막아두면 접속 자체가
+    타임아웃되는데, 모바일 서브도메인은 정책이 다를 수 있어 우회를 시도함)"""
+    last_error = None
+    for url in CANDIDATE_URLS:
+        for attempt in range(2):  # 네트워크 흔들림 대비 짧게 재시도
+            try:
+                resp = requests.get(url, headers=HEADERS, timeout=20)
+                resp.raise_for_status()
+                resp.encoding = "euc-kr"
+                print(f"접속 성공: {url}")
+                return resp.text
+            except requests.exceptions.RequestException as e:
+                last_error = e
+                print(f"접속 실패 ({url}, 시도 {attempt+1}/2): {e}")
+                time.sleep(3)
+    raise RuntimeError(
+        f"모든 URL에서 접속 실패. 컴퓨존이 이 서버(GitHub Actions)의 IP를 "
+        f"차단하고 있을 가능성이 높습니다. 마지막 에러: {last_error}"
+    )
 
 
 def parse_options(html: str) -> list[dict]:
