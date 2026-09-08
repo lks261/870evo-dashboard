@@ -49,9 +49,15 @@ def merge_and_save(site: str, items: list[dict]):
     now_kst = datetime.now(KST)
     today = now_kst.strftime("%Y-%m-%d")
 
+    # site 필드가 아예 없는 레거시 항목(과거 버전 스크립트가 남긴 찌꺼기)은
+    # 여기서 걸러낸다. site가 없으면 "교체 대상"으로 매칭이 안 돼서 영원히
+    # 파일에 남아있는 문제가 있었음.
+    def has_valid_site(it):
+        return bool(it.get("site"))
+
     # 1) latest.json: 같은 site의 기존 항목만 걷어내고 새 결과로 교체
     latest = load_json(LATEST_PATH, {"items": []})
-    kept = [it for it in latest.get("items", []) if it.get("site") != site]
+    kept = [it for it in latest.get("items", []) if has_valid_site(it) and it.get("site") != site]
     latest["items"] = kept + items
     latest["updated_at"] = now_kst.isoformat()
     latest["updated_at_display"] = now_kst.strftime("%Y-%m-%d %H:%M")
@@ -63,7 +69,9 @@ def merge_and_save(site: str, items: list[dict]):
     if today_entry is None:
         today_entry = {"date": today, "items": []}
         history["entries"].append(today_entry)
-    today_entry["items"] = [it for it in today_entry["items"] if it.get("site") != site] + items
+    today_entry["items"] = [
+        it for it in today_entry["items"] if has_valid_site(it) and it.get("site") != site
+    ] + items
     history["entries"].sort(key=lambda e: e["date"])
     save_json(HISTORY_PATH, history)
 
