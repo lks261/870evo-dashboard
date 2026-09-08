@@ -42,6 +42,8 @@
   }
   .tag.genuine{ background:#e6f4f5; color:var(--teal-700); }
   .tag.parallel{ background:#fdf0e4; color:#b96a2e; }
+  .tag.compuzone{ background:#eef1fb; color:#4a56b8; }
+  td.cap-cell{ font-weight:700; color:var(--teal-900); background:#fafcfc; vertical-align:middle; }
 
   .chart-controls{ display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
   .chart-controls label{ font-size:12px; color:var(--ink-soft); font-weight:600; }
@@ -59,7 +61,7 @@
   <header>
     <div>
       <h1>삼성 870 EVO 가격 대시보드</h1>
-      <p>다나와 정품 · 병행수입 용량별 단가 · 매일 자동 수집</p>
+      <p>다나와 · 컴퓨존 정품/병행수입 용량별 단가 · 매일 자동 수집</p>
     </div>
     <div class="refresh-area">
       <div class="ts" id="tsBox">불러오는 중...</div>
@@ -82,7 +84,25 @@
 </div>
 
 <script>
-const PALETTE = { '정품(리테일)': '#f2846b', '병행수입': '#2aa9b8' };
+// 표시 순서와 색상: "정품(다나와) → 병행수입(다나와) → 정품(컴퓨존)" 순
+const SOURCE_ORDER = [
+  { site: '다나와', source_type: '정품',    label: '정품(다나와)',    tagClass: 'genuine',   color: '#f2846b' },
+  { site: '다나와', source_type: '병행수입', label: '병행수입(다나와)', tagClass: 'parallel',  color: '#2aa9b8' },
+  { site: '컴퓨존', source_type: '정품',    label: '정품(컴퓨존)',    tagClass: 'compuzone', color: '#4a56b8' },
+];
+
+function sourceKey(it){ return `${it.site}|${it.source_type}`; }
+
+function sourceMeta(it){
+  const found = SOURCE_ORDER.find(s => s.site === it.site && s.source_type === it.source_type);
+  return found || { label: `${it.source_type}(${it.site})`, tagClass: 'genuine', color: '#888' };
+}
+
+function sourceOrderIndex(it){
+  const idx = SOURCE_ORDER.findIndex(s => s.site === it.site && s.source_type === it.source_type);
+  return idx === -1 ? 999 : idx;
+}
+
 let historyData = null;
 let trendChart = null;
 
@@ -118,24 +138,37 @@ function renderTable(latest){
   const items = latest.items || [];
   if(!items.length){ el.innerHTML = '<div class="empty">데이터가 없습니다.</div>'; return; }
 
+  // 용량 → (사이트+구분 표시순서) 순으로 정렬
   const sorted = [...items].sort((a,b)=>{
-    if(a.source_type !== b.source_type) return a.source_type.localeCompare(b.source_type);
-    return capacitySortKey(a.capacity) - capacitySortKey(b.capacity);
+    const capDiff = capacitySortKey(a.capacity) - capacitySortKey(b.capacity);
+    if(capDiff !== 0) return capDiff;
+    return sourceOrderIndex(a) - sourceOrderIndex(b);
   });
 
-  const rows = sorted.map(it=>{
-    const tagClass = it.source_type === '병행수입' ? 'parallel' : 'genuine';
-    return `<tr>
-      <td><span class="tag ${tagClass}">${it.source_type}</span></td>
-      <td>${it.capacity}</td>
-      <td>${fmtWon(it.price_krw)}</td>
-      <td>${fmtWon(exclVat(it.price_krw))}</td>
-    </tr>`;
+  // 용량별로 묶어서 rowspan 적용
+  const groups = [];
+  sorted.forEach(it=>{
+    const last = groups[groups.length-1];
+    if(last && last.capacity === it.capacity){ last.rows.push(it); }
+    else { groups.push({ capacity: it.capacity, rows: [it] }); }
+  });
+
+  const rows = groups.map(g=>{
+    return g.rows.map((it, i)=>{
+      const meta = sourceMeta(it);
+      const capCell = i===0 ? `<td class="cap-cell" rowspan="${g.rows.length}">${g.capacity}</td>` : '';
+      return `<tr>
+        ${capCell}
+        <td><span class="tag ${meta.tagClass}">${meta.label}</span></td>
+        <td>${fmtWon(it.price_krw)}</td>
+        <td>${fmtWon(exclVat(it.price_krw))}</td>
+      </tr>`;
+    }).join('');
   }).join('');
 
   el.innerHTML = `
     <table>
-      <thead><tr><th>구분</th><th>용량</th><th>가격(부가세포함)</th><th>가격(부가세별도, 추정)</th></tr></thead>
+      <thead><tr><th>용량</th><th>구분</th><th>가격(부가세포함)</th><th>가격(부가세별도, 추정)</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
     <p class="table-note">※ 부가세별도 금액은 크롤링되는 부가세포함 가격을 기준으로 계산한 추정값입니다 (÷1.1, 반올림).</p>
@@ -155,16 +188,16 @@ function renderTrendChart(history, capacity){
   const entries = (history.entries || []).slice().sort((a,b)=> a.date.localeCompare(b.date));
   const dates = entries.map(e=>e.date);
 
-  const seriesFor = (sourceType) => entries.map(e=>{
-    const item = (e.items||[]).find(it => it.capacity === capacity && it.source_type === sourceType);
+  const seriesFor = (site, sourceType) => entries.map(e=>{
+    const item = (e.items||[]).find(it => it.capacity === capacity && it.site === site && it.source_type === sourceType);
     return item ? item.price_krw : null;
   });
 
-  const datasets = ['정품(리테일)','병행수입'].map(st => ({
-    label: st,
-    data: seriesFor(st),
-    borderColor: PALETTE[st],
-    backgroundColor: PALETTE[st],
+  const datasets = SOURCE_ORDER.map(s => ({
+    label: s.label,
+    data: seriesFor(s.site, s.source_type),
+    borderColor: s.color,
+    backgroundColor: s.color,
     spanGaps: true,
     tension: 0.25,
   }));
