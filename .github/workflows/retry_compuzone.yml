@@ -1,0 +1,41 @@
+name: 컴퓨존 재시도
+
+# 본 실행(scrape.yml, 매일 오전 9시)에서 컴퓨존이 접속 차단으로 실패했을 경우를
+# 대비해, 몇 시간 뒤 다른 GitHub Actions 서버(=다른 IP)에서 한 번 더 시도한다.
+# 이미 오늘자 데이터가 있으면 스크립트가 즉시 스킵하므로 중복 저장 걱정은 없다.
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # UTC 03:00 = 한국시간(KST) 낮 12:00 (본 실행 3시간 뒤)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  retry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 파이썬 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 라이브러리 설치
+        run: pip install requests beautifulsoup4
+
+      - name: 컴퓨존 재시도 (오늘자 데이터 없을 때만)
+        run: python scripts/retry_compuzone_if_missing.py
+        continue-on-error: true
+
+      - name: 결과 커밋 & 푸시
+        if: always()
+        run: |
+          git config user.name "870evo-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/latest.json data/history.json
+          git diff --staged --quiet && echo "변경 없음, 커밋 생략" || git commit -m "chore: 컴퓨존 재시도 결과 $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
