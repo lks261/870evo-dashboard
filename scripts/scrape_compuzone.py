@@ -63,7 +63,7 @@ def fetch_product_page() -> str:
     타임아웃되는데, 모바일 서브도메인은 정책이 다를 수 있어 우회를 시도함)"""
     last_error = None
     for url in CANDIDATE_URLS:
-        for attempt in range(2):  # 네트워크 흔들림 대비 짧게 재시도
+        for attempt in range(3):  # 네트워크 흔들림 대비 재시도 (점진적으로 대기시간 늘림)
             try:
                 resp = requests.get(url, headers=HEADERS, timeout=20)
                 resp.raise_for_status()
@@ -72,8 +72,9 @@ def fetch_product_page() -> str:
                 return resp.text
             except requests.exceptions.RequestException as e:
                 last_error = e
-                print(f"접속 실패 ({url}, 시도 {attempt+1}/2): {e}")
-                time.sleep(3)
+                wait = 3 * (attempt + 1)
+                print(f"접속 실패 ({url}, 시도 {attempt+1}/3): {e} → {wait}초 대기 후 재시도")
+                time.sleep(wait)
     raise RuntimeError(
         f"모든 URL에서 접속 실패. 컴퓨존이 이 서버(GitHub Actions)의 IP를 "
         f"차단하고 있을 가능성이 높습니다. 마지막 에러: {last_error}"
