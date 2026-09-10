@@ -1,1 +1,236 @@
-{"updated_at": null, "updated_at_display": "아직 수집 전", "items": []}
+{
+  "updated_at": "2026-09-10T11:50:54.610233+09:00",
+  "updated_at_display": "2026-09-10 11:50",
+  "items": [
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "17000",
+      "capacity": "8GB",
+      "price_krw": 48450,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 8GB PC4-17000 REG ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "17000",
+      "capacity": "16GB",
+      "price_krw": 48490,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 16GB PC4-17000 REG ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "17000",
+      "capacity": "32GB",
+      "price_krw": 178800,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 32GB PC4-17000 REG ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "17000",
+      "capacity": "64GB",
+      "price_krw": 908000,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 64GB PC4-17000 REG ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "19200",
+      "capacity": "8GB",
+      "price_krw": 49400,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 8GB PC4-19200 REG ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "19200",
+      "capacity": "16GB",
+      "price_krw": 100880,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 16GB PC4-19200 REG ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "19200",
+      "capacity": "32GB",
+      "price_krw": 225150,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 32GB PC4-19200 REG ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "19200",
+      "capacity": "64GB",
+      "price_krw": 818800,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 64GB PC4-19200 REG ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "21300",
+      "capacity": "8GB",
+      "price_krw": 92800,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 8GB PC4-21300 REG ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "21300",
+      "capacity": "16GB",
+      "price_krw": 208800,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 16GB PC4-21300 REG ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "21300",
+      "capacity": "32GB",
+      "price_krw": 519000,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 32GB PC4-21300 REG ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "21300",
+      "capacity": "64GB",
+      "price_krw": 1200000,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 64GB PC4-21300 REG ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "25600",
+      "capacity": "8GB",
+      "price_krw": 95950,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 8GB PC4-25600 REG ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "25600",
+      "capacity": "16GB",
+      "price_krw": 296000,
+      "pcode": "13432766",
+      "url": "https://prod.danawa.com/info/?pcode=13432766"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "25600",
+      "capacity": "32GB",
+      "price_krw": 515850,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 32GB PC4-25600 REG ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "25600",
+      "capacity": "64GB",
+      "price_krw": 1544900,
+      "pcode": "13433147",
+      "url": "https://prod.danawa.com/info/?pcode=13433147"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "UDIMM",
+      "clock": "19200",
+      "capacity": "8GB",
+      "price_krw": 161800,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 8GB PC4-19200 UDIMM ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "UDIMM",
+      "clock": "19200",
+      "capacity": "16GB",
+      "price_krw": 245800,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 16GB PC4-19200 UDIMM ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "UDIMM",
+      "clock": "21300",
+      "capacity": "8GB",
+      "price_krw": 272380,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 8GB PC4-21300 UDIMM ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "UDIMM",
+      "clock": "21300",
+      "capacity": "16GB",
+      "price_krw": 600000,
+      "pcode": "11633126",
+      "url": "https://prod.danawa.com/info/?pcode=11633126"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "UDIMM",
+      "clock": "21300",
+      "capacity": "32GB",
+      "price_krw": 316000,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 32GB PC4-21300 UDIMM ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "UDIMM",
+      "clock": "25600",
+      "capacity": "16GB",
+      "price_krw": 68930,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 16GB PC4-25600 UDIMM ECC"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "UDIMM",
+      "clock": "25600",
+      "capacity": "32GB",
+      "price_krw": 180000,
+      "pcode": null,
+      "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 32GB PC4-25600 UDIMM ECC"
+    }
+  ]
+}
