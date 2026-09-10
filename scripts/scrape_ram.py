@@ -1,5 +1,5 @@
 """
-다나와 - 삼성전자 서버용 DDR4 RAM(RDIMM/UDIMM) 용량×클럭별 가격 수집
+다나와 - 삼성전자 서버용 DDR4 RAM(RDIMM/EDIMM) 용량×클럭별 가격 수집
 ================================================================
 
 SSD(870 EVO)와 다른 점: SSD는 한 상품에 용량별 옵션이 "가격비교 그룹"으로
@@ -9,7 +9,7 @@ SSD(870 EVO)와 다른 점: SSD는 한 상품에 용량별 옵션이 "가격비�
 
 수집 대상 (요청하신 스펙 그대로):
     RDIMM(Registered): 클럭 17000 / 19200 / 21300 / 25600
-    UDIMM(Unbuffered): 클럭        19200 / 21300 / 25600   (17000 없음)
+    UDIMM(Unbuffered, 표기는 EDIMM): 클럭 19200 / 21300 / 25600  (17000 없음)
     각 클럭마다 용량:   8GB / 16GB / 32GB / 64GB
     → 총 (4+3) x 4 = 28개 조합
 
@@ -63,7 +63,7 @@ CLOCK_MHZ = {
 # (dimm_type, 허용 클럭 목록)
 DIMM_CLOCKS = {
     "RDIMM": ["17000", "19200", "21300", "25600"],
-    "UDIMM": ["19200", "21300", "25600"],
+    "EDIMM": ["19200", "21300", "25600"],
 }
 CAPACITIES = ["8GB", "16GB", "32GB", "64GB"]
 
@@ -72,7 +72,7 @@ PRICE_PATTERN = re.compile(r"([\d,]+)\s*원")
 
 
 def build_query(dimm_type: str, clock: str, capacity: str) -> str:
-    reg_kw = "REG" if dimm_type == "RDIMM" else "UDIMM"
+    reg_kw = "REG" if dimm_type == "RDIMM" else "UDIMM"  # 검색어 자체는 업계 표준 용어(UDIMM)로 보냄
     return f"삼성전자 서버용 DDR4 {capacity} PC4-{clock} {reg_kw} ECC"
 
 
@@ -118,7 +118,7 @@ def block_matches(text: str, dimm_type: str, clock: str, capacity: str) -> bool:
     if dimm_type == "RDIMM":
         if not ("REG" in text.upper() or "RDIMM" in text.upper()):
             return False
-    else:  # UDIMM
+    else:  # EDIMM (Unbuffered) — 상품명 텍스트 판별은 여전히 UDIMM/Unbuffered 키워드로
         if "REG" in text.upper() or "RDIMM" in text.upper():
             return False  # RDIMM으로 오검출되는 것 방지
         if not ("UDIMM" in text.upper() or "UNBUFFERED" in text.upper() or "ECC" in text.upper()):

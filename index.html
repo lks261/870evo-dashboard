@@ -64,7 +64,7 @@
   .tabpanel{ display:none; }
   .tabpanel.active{ display:block; }
   .tag.rdimm{ background:#e6f4f5; color:var(--teal-700); }
-  .tag.udimm{ background:#fdf0e4; color:#b96a2e; }
+  .tag.edimm{ background:#fdf0e4; color:#b96a2e; }
 </style>
 </head>
 <body>
@@ -116,7 +116,7 @@
         <label>타입</label>
         <select id="ramDimmSelect">
           <option value="RDIMM">RDIMM (Registered)</option>
-          <option value="UDIMM">UDIMM (Unbuffered)</option>
+          <option value="EDIMM">EDIMM (Unbuffered)</option>
         </select>
       </div>
       <canvas id="ramTrendChart"></canvas>
@@ -127,7 +127,7 @@
 <script>
 // ============ 공통 유틸 ============
 function fmtWon(n){ return n.toLocaleString('ko-KR') + '원'; }
-function exclVat(n){ return Math.round(n / 1.1); }
+function exclVat(n){ return Math.round(n / 1.1 / 100) * 100; }  // 추정값이므로 100원 단위로 반올림
 
 function capacitySortKey(cap){
   const m = cap.match(/(\d+(?:\.\d+)?)\s*(TB|GB)/i);
@@ -156,7 +156,7 @@ function renderTimestamp(latest){
 // ============ 탭 전환 ============
 const TAB_META = {
   ssd: { title: '삼성 870 EVO 가격 대시보드', desc: '다나와 · 컴퓨존 정품/병행수입 용량별 단가 · 매일 자동 수집' },
-  ram: { title: '삼성전자 서버용 DDR4 RAM 가격 대시보드', desc: '다나와 RDIMM/UDIMM 용량×클럭별 단가 · 매일 자동 수집' },
+  ram: { title: '삼성전자 서버용 DDR4 RAM 가격 대시보드', desc: '다나와 RDIMM/EDIMM 용량×클럭별 단가 · 매일 자동 수집' },
 };
 let ramLoaded = false;
 
@@ -295,9 +295,9 @@ const RAM_COMBO_ORDER = [
   { dimm_type:'RDIMM', clock:'19200', label:'RDIMM (PC4-19200)', color:'#e8b84b' },
   { dimm_type:'RDIMM', clock:'21300', label:'RDIMM (PC4-21300)', color:'#8fbf9f' },
   { dimm_type:'RDIMM', clock:'25600', label:'RDIMM (PC4-25600)', color:'#7ab8d9' },
-  { dimm_type:'UDIMM', clock:'19200', label:'UDIMM (PC4-19200)', color:'#a893c9' },
-  { dimm_type:'UDIMM', clock:'21300', label:'UDIMM (PC4-21300)', color:'#e88fa8' },
-  { dimm_type:'UDIMM', clock:'25600', label:'UDIMM (PC4-25600)', color:'#4a56b8' },
+  { dimm_type:'EDIMM', clock:'19200', label:'EDIMM (PC4-19200)', color:'#a893c9' },
+  { dimm_type:'EDIMM', clock:'21300', label:'EDIMM (PC4-21300)', color:'#e88fa8' },
+  { dimm_type:'EDIMM', clock:'25600', label:'EDIMM (PC4-25600)', color:'#4a56b8' },
 ];
 
 function ramComboMeta(it){
@@ -333,7 +333,7 @@ function renderRAMTable(latest){
   const rows = groups.map(g=>{
     return g.rows.map((it, i)=>{
       const meta = ramComboMeta(it);
-      const tagClass = it.dimm_type === 'RDIMM' ? 'rdimm' : 'udimm';
+      const tagClass = it.dimm_type === 'RDIMM' ? 'rdimm' : 'edimm';
       const capCell = i===0 ? `<td class="cap-cell" rowspan="${g.rows.length}">${g.capacity}</td>` : '';
       return `<tr>
         ${capCell}
