@@ -89,7 +89,7 @@
           "dimm_type": "RDIMM",
           "clock": "21300",
           "capacity": "8GB",
-          "price_krw": 92800,
+          "price_krw": 63000,
           "pcode": null,
           "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 8GB PC4-21300 REG ECC"
         },
@@ -99,7 +99,7 @@
           "dimm_type": "RDIMM",
           "clock": "21300",
           "capacity": "16GB",
-          "price_krw": 208800,
+          "price_krw": 188800,
           "pcode": null,
           "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 16GB PC4-21300 REG ECC"
         },
@@ -109,7 +109,7 @@
           "dimm_type": "RDIMM",
           "clock": "21300",
           "capacity": "32GB",
-          "price_krw": 519000,
+          "price_krw": 328800,
           "pcode": null,
           "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 32GB PC4-21300 REG ECC"
         },
@@ -166,7 +166,7 @@
         {
           "site": "다나와",
           "category": "RAM",
-          "dimm_type": "UDIMM",
+          "dimm_type": "EDIMM",
           "clock": "19200",
           "capacity": "8GB",
           "price_krw": 161800,
@@ -176,7 +176,7 @@
         {
           "site": "다나와",
           "category": "RAM",
-          "dimm_type": "UDIMM",
+          "dimm_type": "EDIMM",
           "clock": "19200",
           "capacity": "16GB",
           "price_krw": 245800,
@@ -186,7 +186,7 @@
         {
           "site": "다나와",
           "category": "RAM",
-          "dimm_type": "UDIMM",
+          "dimm_type": "EDIMM",
           "clock": "21300",
           "capacity": "8GB",
           "price_krw": 272380,
@@ -196,7 +196,7 @@
         {
           "site": "다나와",
           "category": "RAM",
-          "dimm_type": "UDIMM",
+          "dimm_type": "EDIMM",
           "clock": "21300",
           "capacity": "16GB",
           "price_krw": 600000,
@@ -206,7 +206,7 @@
         {
           "site": "다나와",
           "category": "RAM",
-          "dimm_type": "UDIMM",
+          "dimm_type": "EDIMM",
           "clock": "21300",
           "capacity": "32GB",
           "price_krw": 316000,
@@ -216,7 +216,7 @@
         {
           "site": "다나와",
           "category": "RAM",
-          "dimm_type": "UDIMM",
+          "dimm_type": "EDIMM",
           "clock": "25600",
           "capacity": "16GB",
           "price_krw": 68930,
@@ -226,7 +226,7 @@
         {
           "site": "다나와",
           "category": "RAM",
-          "dimm_type": "UDIMM",
+          "dimm_type": "EDIMM",
           "clock": "25600",
           "capacity": "32GB",
           "price_krw": 180000,
