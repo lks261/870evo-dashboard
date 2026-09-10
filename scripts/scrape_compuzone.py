@@ -129,7 +129,7 @@ def main():
     for v in items:
         print(f"  {v['capacity']:>6} | {v['price_krw']:>10,}원")
 
-    latest, history = merge_and_save(SITE, items)
+    latest, history = merge_and_save("ssd", SITE, items)
     print(f"\n저장 완료 (site={SITE}). 히스토리 누적 {len(history['entries'])}일치")
 
 

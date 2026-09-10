@@ -13,14 +13,15 @@ import os
 from datetime import datetime, timezone, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from common import load_json, HISTORY_PATH
+from common import load_json, dataset_paths
 
 KST = timezone(timedelta(hours=9))
 
 
 def today_has_compuzone() -> bool:
     today = datetime.now(KST).strftime("%Y-%m-%d")
-    history = load_json(HISTORY_PATH, {"entries": []})
+    _, history_path = dataset_paths("ssd")
+    history = load_json(history_path, {"entries": []})
     today_entry = next((e for e in history["entries"] if e["date"] == today), None)
     if not today_entry:
         return False
