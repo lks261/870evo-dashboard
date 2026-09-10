@@ -72,7 +72,7 @@
   <header>
     <div>
       <h1 id="pageTitle">삼성 부품 가격 대시보드</h1>
-      <p id="pageDesc">다나와 · 컴퓨존 용량별 단가 · 매일 자동 수집</p>
+      <p id="pageDesc" style="display:none;"></p>
     </div>
     <div class="refresh-area">
       <div class="ts" id="tsBox">불러오는 중...</div>
@@ -155,8 +155,8 @@ function renderTimestamp(latest){
 
 // ============ 탭 전환 ============
 const TAB_META = {
-  ssd: { title: '삼성 870 EVO 가격 대시보드', desc: '다나와 · 컴퓨존 정품/병행수입 용량별 단가 · 매일 자동 수집' },
-  ram: { title: '삼성전자 서버용 DDR4 RAM 가격 대시보드', desc: '다나와 RDIMM/EDIMM 용량×클럭별 단가 · 매일 자동 수집' },
+  ssd: { title: '삼성 870 EVO 가격 대시보드', desc: '' },
+  ram: { title: '삼성전자 서버용 DDR4 RAM 가격 대시보드', desc: '' },
 };
 let ramLoaded = false;
 
@@ -175,9 +175,9 @@ document.querySelectorAll('.tabbtn').forEach(btn=>{
 
 // ============ SSD 탭 ============
 const SOURCE_ORDER = [
-  { site: '다나와', source_type: '정품',    label: '정품(다나와)',    tagClass: 'genuine',   color: '#f2846b' },
-  { site: '다나와', source_type: '병행수입', label: '병행수입(다나와)', tagClass: 'parallel',  color: '#2aa9b8' },
-  { site: '컴퓨존', source_type: '정품',    label: '정품(컴퓨존)',    tagClass: 'compuzone', color: '#4a56b8' },
+  { site: '다나와', source_type: '정품',    label: '정품',    tagClass: 'genuine',   color: '#f2846b' },
+  { site: '다나와', source_type: '병행수입', label: '병행수입', tagClass: 'parallel',  color: '#2aa9b8' },
+  { site: '컴퓨존', source_type: '정품',    label: '컴퓨존',   tagClass: 'compuzone', color: '#4a56b8' },
 ];
 
 function sourceMeta(it){
