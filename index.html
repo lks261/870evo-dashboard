@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>삼성 870 EVO 가격 대시보드</title>
+<title>삼성 부품 가격 대시보드</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
   :root{
@@ -54,58 +54,78 @@
 
   .empty{ color:#a9b6bb; font-size:13px; padding:30px; text-align:center; }
   .error{ color:#c0392b; font-size:13px; padding:16px; background:#fdecea; border-radius:8px; }
+
+  .tabbar{ display:flex; gap:8px; margin-bottom:20px; }
+  .tabbtn{
+    border:1px solid var(--line); background:var(--paper); color:var(--ink-soft);
+    border-radius:999px; padding:8px 18px; font-size:13px; font-weight:700; cursor:pointer;
+  }
+  .tabbtn.active{ background:var(--teal-900); border-color:var(--teal-900); color:white; }
+  .tabpanel{ display:none; }
+  .tabpanel.active{ display:block; }
+  .tag.rdimm{ background:#e6f4f5; color:var(--teal-700); }
+  .tag.udimm{ background:#fdf0e4; color:#b96a2e; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <div>
-      <h1>삼성 870 EVO 가격 대시보드</h1>
-      <p>다나와 · 컴퓨존 정품/병행수입 용량별 단가 · 매일 자동 수집</p>
+      <h1 id="pageTitle">삼성 부품 가격 대시보드</h1>
+      <p id="pageDesc">다나와 · 컴퓨존 용량별 단가 · 매일 자동 수집</p>
     </div>
     <div class="refresh-area">
       <div class="ts" id="tsBox">불러오는 중...</div>
     </div>
   </header>
 
-  <div class="card">
-    <h2>최신 용량별 단가</h2>
-    <div id="tableArea"><div class="empty">불러오는 중...</div></div>
+  <div class="tabbar">
+    <button class="tabbtn active" data-tab="ssd">SSD</button>
+    <button class="tabbtn" data-tab="ram">서버 RAM</button>
   </div>
 
-  <div class="card">
-    <h2>가격 추이 (부가세포함)</h2>
-    <div class="chart-controls">
-      <label>용량</label>
-      <select id="capacitySelect"></select>
+  <!-- ===================== SSD 탭 ===================== -->
+  <div class="tabpanel active" id="tabpanel-ssd">
+    <div class="card">
+      <h2>최신 용량별 단가</h2>
+      <div id="ssdTableArea"><div class="empty">불러오는 중...</div></div>
     </div>
-    <canvas id="trendChart"></canvas>
+
+    <div class="card">
+      <h2>가격 추이 (부가세포함)</h2>
+      <div class="chart-controls">
+        <label>용량</label>
+        <select id="ssdCapacitySelect"></select>
+      </div>
+      <canvas id="ssdTrendChart"></canvas>
+    </div>
+  </div>
+
+  <!-- ===================== RAM 탭 ===================== -->
+  <div class="tabpanel" id="tabpanel-ram">
+    <div class="card">
+      <h2>최신 용량별 단가 — 삼성전자 서버용 DDR4</h2>
+      <div id="ramTableArea"><div class="empty">불러오는 중...</div></div>
+    </div>
+
+    <div class="card">
+      <h2>가격 추이 (부가세포함)</h2>
+      <div class="chart-controls">
+        <label>용량</label>
+        <select id="ramCapacitySelect"></select>
+        <label>타입</label>
+        <select id="ramDimmSelect">
+          <option value="RDIMM">RDIMM (Registered)</option>
+          <option value="UDIMM">UDIMM (Unbuffered)</option>
+        </select>
+      </div>
+      <canvas id="ramTrendChart"></canvas>
+    </div>
   </div>
 </div>
 
 <script>
-// 표시 순서와 색상: "정품(다나와) → 병행수입(다나와) → 정품(컴퓨존)" 순
-const SOURCE_ORDER = [
-  { site: '다나와', source_type: '정품',    label: '정품(다나와)',    tagClass: 'genuine',   color: '#f2846b' },
-  { site: '다나와', source_type: '병행수입', label: '병행수입(다나와)', tagClass: 'parallel',  color: '#2aa9b8' },
-  { site: '컴퓨존', source_type: '정품',    label: '정품(컴퓨존)',    tagClass: 'compuzone', color: '#4a56b8' },
-];
-
-function sourceKey(it){ return `${it.site}|${it.source_type}`; }
-
-function sourceMeta(it){
-  const found = SOURCE_ORDER.find(s => s.site === it.site && s.source_type === it.source_type);
-  return found || { label: `${it.source_type}(${it.site})`, tagClass: 'genuine', color: '#888' };
-}
-
-function sourceOrderIndex(it){
-  const idx = SOURCE_ORDER.findIndex(s => s.site === it.site && s.source_type === it.source_type);
-  return idx === -1 ? 999 : idx;
-}
-
-let historyData = null;
-let trendChart = null;
-
+// ============ 공통 유틸 ============
 function fmtWon(n){ return n.toLocaleString('ko-KR') + '원'; }
 function exclVat(n){ return Math.round(n / 1.1); }
 
@@ -116,13 +136,13 @@ function capacitySortKey(cap){
   return m[2].toUpperCase() === 'TB' ? v*1024 : v;
 }
 
-async function loadData(bust){
+async function loadDataset(dataset, bust){
   const suffix = bust ? `?t=${Date.now()}` : '';
   const [latestRes, historyRes] = await Promise.all([
-    fetch(`data/latest.json${suffix}`),
-    fetch(`data/history.json${suffix}`),
+    fetch(`data/${dataset}/latest.json${suffix}`),
+    fetch(`data/${dataset}/history.json${suffix}`),
   ]);
-  if(!latestRes.ok) throw new Error('latest.json을 불러오지 못했습니다.');
+  if(!latestRes.ok) throw new Error(`${dataset}/latest.json을 불러오지 못했습니다.`);
   const latest = await latestRes.json();
   const history = historyRes.ok ? await historyRes.json() : {entries:[]};
   return {latest, history};
@@ -133,19 +153,56 @@ function renderTimestamp(latest){
   box.innerHTML = `크롤링 시각: <b>${latest.updated_at_display || '-'}</b>`;
 }
 
-function renderTable(latest){
-  const el = document.getElementById('tableArea');
+// ============ 탭 전환 ============
+const TAB_META = {
+  ssd: { title: '삼성 870 EVO 가격 대시보드', desc: '다나와 · 컴퓨존 정품/병행수입 용량별 단가 · 매일 자동 수집' },
+  ram: { title: '삼성전자 서버용 DDR4 RAM 가격 대시보드', desc: '다나와 RDIMM/UDIMM 용량×클럭별 단가 · 매일 자동 수집' },
+};
+let ramLoaded = false;
+
+document.querySelectorAll('.tabbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const tab = btn.dataset.tab;
+    document.querySelectorAll('.tabbtn').forEach(b=>b.classList.toggle('active', b===btn));
+    document.querySelectorAll('.tabpanel').forEach(p=>p.classList.toggle('active', p.id === `tabpanel-${tab}`));
+    document.getElementById('pageTitle').textContent = TAB_META[tab].title;
+    document.getElementById('pageDesc').textContent = TAB_META[tab].desc;
+    if(tab === 'ram' && !ramLoaded){ ramLoaded = true; loadAndRenderRAM(); }
+    if(tab === 'ssd') renderTimestamp(window.__ssdLatest || {});
+    if(tab === 'ram') renderTimestamp(window.__ramLatest || {});
+  });
+});
+
+// ============ SSD 탭 ============
+const SOURCE_ORDER = [
+  { site: '다나와', source_type: '정품',    label: '정품(다나와)',    tagClass: 'genuine',   color: '#f2846b' },
+  { site: '다나와', source_type: '병행수입', label: '병행수입(다나와)', tagClass: 'parallel',  color: '#2aa9b8' },
+  { site: '컴퓨존', source_type: '정품',    label: '정품(컴퓨존)',    tagClass: 'compuzone', color: '#4a56b8' },
+];
+
+function sourceMeta(it){
+  const found = SOURCE_ORDER.find(s => s.site === it.site && s.source_type === it.source_type);
+  return found || { label: `${it.source_type}(${it.site})`, tagClass: 'genuine', color: '#888' };
+}
+function sourceOrderIndex(it){
+  const idx = SOURCE_ORDER.findIndex(s => s.site === it.site && s.source_type === it.source_type);
+  return idx === -1 ? 999 : idx;
+}
+
+let ssdHistory = null;
+let ssdTrendChart = null;
+
+function renderSSDTable(latest){
+  const el = document.getElementById('ssdTableArea');
   const items = latest.items || [];
   if(!items.length){ el.innerHTML = '<div class="empty">데이터가 없습니다.</div>'; return; }
 
-  // 용량 → (사이트+구분 표시순서) 순으로 정렬
   const sorted = [...items].sort((a,b)=>{
     const capDiff = capacitySortKey(a.capacity) - capacitySortKey(b.capacity);
     if(capDiff !== 0) return capDiff;
     return sourceOrderIndex(a) - sourceOrderIndex(b);
   });
 
-  // 용량별로 묶어서 rowspan 적용
   const groups = [];
   sorted.forEach(it=>{
     const last = groups[groups.length-1];
@@ -175,8 +232,8 @@ function renderTable(latest){
   `;
 }
 
-function populateCapacitySelect(history){
-  const select = document.getElementById('capacitySelect');
+function populateSSDCapacitySelect(history){
+  const select = document.getElementById('ssdCapacitySelect');
   const caps = new Set();
   (history.entries||[]).forEach(e => (e.items||[]).forEach(it => caps.add(it.capacity)));
   const sortedCaps = [...caps].sort((a,b)=> capacitySortKey(a) - capacitySortKey(b));
@@ -184,7 +241,7 @@ function populateCapacitySelect(history){
   if(sortedCaps.includes('1TB')) select.value = '1TB';
 }
 
-function renderTrendChart(history, capacity){
+function renderSSDTrendChart(history, capacity){
   const entries = (history.entries || []).slice().sort((a,b)=> a.date.localeCompare(b.date));
   const dates = entries.map(e=>e.date);
 
@@ -202,8 +259,8 @@ function renderTrendChart(history, capacity){
     tension: 0.25,
   }));
 
-  if(trendChart) trendChart.destroy();
-  trendChart = new Chart(document.getElementById('trendChart'), {
+  if(ssdTrendChart) ssdTrendChart.destroy();
+  ssdTrendChart = new Chart(document.getElementById('ssdTrendChart'), {
     type: 'line',
     data: { labels: dates, datasets },
     options: {
@@ -214,24 +271,150 @@ function renderTrendChart(history, capacity){
   });
 }
 
-async function loadAndRender(){
+async function loadAndRenderSSD(){
   try{
-    const {latest, history} = await loadData(false);
-    historyData = history;
+    const {latest, history} = await loadDataset('ssd', false);
+    window.__ssdLatest = latest;
+    ssdHistory = history;
     renderTimestamp(latest);
-    renderTable(latest);
-    populateCapacitySelect(history);
-    renderTrendChart(history, document.getElementById('capacitySelect').value);
+    renderSSDTable(latest);
+    populateSSDCapacitySelect(history);
+    renderSSDTrendChart(history, document.getElementById('ssdCapacitySelect').value);
   }catch(err){
-    document.getElementById('tableArea').innerHTML = `<div class="error">데이터를 불러오지 못했습니다: ${err.message}</div>`;
+    document.getElementById('ssdTableArea').innerHTML = `<div class="error">데이터를 불러오지 못했습니다: ${err.message}</div>`;
   }
 }
 
-document.getElementById('capacitySelect').addEventListener('change', (e)=>{
-  if(historyData) renderTrendChart(historyData, e.target.value);
+document.getElementById('ssdCapacitySelect').addEventListener('change', (e)=>{
+  if(ssdHistory) renderSSDTrendChart(ssdHistory, e.target.value);
 });
 
-loadAndRender();
+// ============ RAM 탭 ============
+const RAM_COMBO_ORDER = [
+  { dimm_type:'RDIMM', clock:'17000', label:'RDIMM (PC4-17000)', color:'#f2846b' },
+  { dimm_type:'RDIMM', clock:'19200', label:'RDIMM (PC4-19200)', color:'#e8b84b' },
+  { dimm_type:'RDIMM', clock:'21300', label:'RDIMM (PC4-21300)', color:'#8fbf9f' },
+  { dimm_type:'RDIMM', clock:'25600', label:'RDIMM (PC4-25600)', color:'#7ab8d9' },
+  { dimm_type:'UDIMM', clock:'19200', label:'UDIMM (PC4-19200)', color:'#a893c9' },
+  { dimm_type:'UDIMM', clock:'21300', label:'UDIMM (PC4-21300)', color:'#e88fa8' },
+  { dimm_type:'UDIMM', clock:'25600', label:'UDIMM (PC4-25600)', color:'#4a56b8' },
+];
+
+function ramComboMeta(it){
+  return RAM_COMBO_ORDER.find(c => c.dimm_type === it.dimm_type && c.clock === it.clock)
+      || { label: `${it.dimm_type} (PC4-${it.clock})`, color:'#888' };
+}
+function ramComboOrderIndex(it){
+  const idx = RAM_COMBO_ORDER.findIndex(c => c.dimm_type === it.dimm_type && c.clock === it.clock);
+  return idx === -1 ? 999 : idx;
+}
+
+let ramHistory = null;
+let ramTrendChart = null;
+
+function renderRAMTable(latest){
+  const el = document.getElementById('ramTableArea');
+  const items = latest.items || [];
+  if(!items.length){ el.innerHTML = '<div class="empty">데이터가 없습니다.</div>'; return; }
+
+  const sorted = [...items].sort((a,b)=>{
+    const capDiff = capacitySortKey(a.capacity) - capacitySortKey(b.capacity);
+    if(capDiff !== 0) return capDiff;
+    return ramComboOrderIndex(a) - ramComboOrderIndex(b);
+  });
+
+  const groups = [];
+  sorted.forEach(it=>{
+    const last = groups[groups.length-1];
+    if(last && last.capacity === it.capacity){ last.rows.push(it); }
+    else { groups.push({ capacity: it.capacity, rows: [it] }); }
+  });
+
+  const rows = groups.map(g=>{
+    return g.rows.map((it, i)=>{
+      const meta = ramComboMeta(it);
+      const tagClass = it.dimm_type === 'RDIMM' ? 'rdimm' : 'udimm';
+      const capCell = i===0 ? `<td class="cap-cell" rowspan="${g.rows.length}">${g.capacity}</td>` : '';
+      return `<tr>
+        ${capCell}
+        <td><span class="tag ${tagClass}">${meta.label}</span></td>
+        <td>${fmtWon(it.price_krw)}</td>
+        <td>${fmtWon(exclVat(it.price_krw))}</td>
+      </tr>`;
+    }).join('');
+  }).join('');
+
+  el.innerHTML = `
+    <table>
+      <thead><tr><th>용량</th><th>타입/클럭</th><th>가격(부가세포함)</th><th>가격(부가세별도, 추정)</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="table-note">※ 판매자마다 다르게 표기된 상품 중 삼성전자 최저가를 채택한 값입니다. 부가세별도는 계산 추정값입니다.</p>
+  `;
+}
+
+function populateRAMSelects(history){
+  const capSelect = document.getElementById('ramCapacitySelect');
+  const caps = new Set();
+  (history.entries||[]).forEach(e => (e.items||[]).forEach(it => caps.add(it.capacity)));
+  const sortedCaps = [...caps].sort((a,b)=> capacitySortKey(a) - capacitySortKey(b));
+  capSelect.innerHTML = sortedCaps.map(c=>`<option value="${c}">${c}</option>`).join('');
+  if(sortedCaps.includes('16GB')) capSelect.value = '16GB';
+}
+
+function renderRAMTrendChart(history, capacity, dimmType){
+  const entries = (history.entries || []).slice().sort((a,b)=> a.date.localeCompare(b.date));
+  const dates = entries.map(e=>e.date);
+
+  const combosForType = RAM_COMBO_ORDER.filter(c => c.dimm_type === dimmType);
+  const seriesFor = (clock) => entries.map(e=>{
+    const item = (e.items||[]).find(it => it.capacity === capacity && it.dimm_type === dimmType && it.clock === clock);
+    return item ? item.price_krw : null;
+  });
+
+  const datasets = combosForType.map(c => ({
+    label: c.label,
+    data: seriesFor(c.clock),
+    borderColor: c.color,
+    backgroundColor: c.color,
+    spanGaps: true,
+    tension: 0.25,
+  }));
+
+  if(ramTrendChart) ramTrendChart.destroy();
+  ramTrendChart = new Chart(document.getElementById('ramTrendChart'), {
+    type: 'line',
+    data: { labels: dates, datasets },
+    options: {
+      responsive: true,
+      plugins: { legend: { position:'bottom' } },
+      scales: { y: { ticks: { callback: v => v.toLocaleString('ko-KR') + '원' } } }
+    }
+  });
+}
+
+async function loadAndRenderRAM(){
+  try{
+    const {latest, history} = await loadDataset('ram', false);
+    window.__ramLatest = latest;
+    ramHistory = history;
+    renderRAMTable(latest);
+    populateRAMSelects(history);
+    renderRAMTrendChart(history, document.getElementById('ramCapacitySelect').value, document.getElementById('ramDimmSelect').value);
+  }catch(err){
+    document.getElementById('ramTableArea').innerHTML = `<div class="error">데이터를 불러오지 못했습니다: ${err.message}</div>`;
+  }
+}
+
+document.getElementById('ramCapacitySelect').addEventListener('change', ()=>{
+  if(ramHistory) renderRAMTrendChart(ramHistory, document.getElementById('ramCapacitySelect').value, document.getElementById('ramDimmSelect').value);
+});
+document.getElementById('ramDimmSelect').addEventListener('change', ()=>{
+  if(ramHistory) renderRAMTrendChart(ramHistory, document.getElementById('ramCapacitySelect').value, document.getElementById('ramDimmSelect').value);
+});
+
+// 시작 시 SSD 탭 데이터만 우선 로드 (RAM은 탭 클릭 시 로드)
+loadAndRenderSSD();
 </script>
 </body>
 </html>

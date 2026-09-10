@@ -1,0 +1,46 @@
+name: 870 EVO 가격 수집
+
+on:
+  schedule:
+    # 매일 UTC 00:00 = 한국시간(KST) 09:00
+    - cron: "0 0 * * *"
+  workflow_dispatch: {}   # 우측 상단 "Run workflow" 버튼으로 수동 실행도 가능
+
+permissions:
+  contents: write   # data/*.json 파일을 이 워크플로우가 직접 커밋하기 위해 필요
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 파이썬 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 라이브러리 설치
+        run: pip install requests beautifulsoup4
+
+      - name: 다나와 SSD 크롤링 실행
+        run: python scripts/scrape_870evo.py
+        continue-on-error: true   # 한쪽이 실패해도 다른 쪽 결과는 커밋되도록
+
+      - name: 컴퓨존 SSD 크롤링 실행
+        run: python scripts/scrape_compuzone.py
+        continue-on-error: true   # 컴퓨존이 간헐적으로 접속 차단될 수 있음 (재시도는 스크립트 내부에서 처리)
+
+      - name: 다나와 서버 RAM 크롤링 실행
+        run: python scripts/scrape_ram.py
+        continue-on-error: true
+
+      - name: 결과 커밋 & 푸시
+        if: always()   # 위 단계가 실패했더라도 성공한 쪽 결과는 반드시 커밋
+        run: |
+          git config user.name "870evo-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/
+          git diff --staged --quiet && echo "변경 없음, 커밋 생략" || git commit -m "chore: 가격 데이터 업데이트 $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push
