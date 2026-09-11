@@ -151,6 +151,7 @@ def collect_one(dimm_type: str, clock: str, capacity: str):
 
     best_price = None
     best_pcode = None
+    best_text = None
     for block in blocks:
         text = block.get_text(" ", strip=True)
         if not block_matches(text, dimm_type, clock, capacity):
@@ -160,6 +161,7 @@ def collect_one(dimm_type: str, clock: str, capacity: str):
             continue
         if best_price is None or price < best_price:
             best_price = price
+            best_text = text[:120]  # 디버깅용으로 앞부분만 저장 (전체는 너무 길어서)
             a = block.select_one("a[href*='pcode=']")
             pcode_match = re.search(r"pcode=(\d+)", a.get("href", "")) if a else None
             best_pcode = pcode_match.group(1) if pcode_match else None
@@ -175,11 +177,53 @@ def collect_one(dimm_type: str, clock: str, capacity: str):
         "capacity": capacity,
         "price_krw": best_price,
         "pcode": best_pcode,
+        "matched_text": best_text,  # 실제로 뭘 매칭했는지 나중에 검증할 때 씀
         "url": (
             f"https://prod.danawa.com/info/?pcode={best_pcode}"
             if best_pcode else f"https://search.danawa.com/dsearch.php?k1={query}"
         ),
     }
+
+
+def sanity_check(items: list[dict]):
+    """수집된 가격들 사이에 말이 안 되는 역전이 있는지 확인해서 로그에 경고를 남긴다.
+    (자동으로 지우거나 고치지는 않음 — 사람이 한 번 눈으로 확인하라는 용도)"""
+    warnings = []
+    clock_order = {"17000": 0, "19200": 1, "21300": 2, "25600": 3}
+    cap_order = {"8GB": 0, "16GB": 1, "32GB": 2, "64GB": 3}
+
+    by_dimm_cap = {}
+    by_dimm_clock = {}
+    for it in items:
+        by_dimm_cap.setdefault((it["dimm_type"], it["capacity"]), []).append(it)
+        by_dimm_clock.setdefault((it["dimm_type"], it["clock"]), []).append(it)
+
+    # 같은 용량 내에서: 클럭이 높은데 더 싸면 이상함
+    for (dimm, cap), group in by_dimm_cap.items():
+        group_sorted = sorted(group, key=lambda x: clock_order.get(x["clock"], 99))
+        for a, b in zip(group_sorted, group_sorted[1:]):
+            if b["price_krw"] < a["price_krw"]:
+                warnings.append(
+                    f"{dimm} {cap}: PC4-{a['clock']}({a['price_krw']:,}원) > "
+                    f"PC4-{b['clock']}({b['price_krw']:,}원) — 클럭 높은데 더 쌈"
+                )
+
+    # 같은 클럭 내에서: 용량이 큰데 더 싸면 이상함
+    for (dimm, clock), group in by_dimm_clock.items():
+        group_sorted = sorted(group, key=lambda x: cap_order.get(x["capacity"], 99))
+        for a, b in zip(group_sorted, group_sorted[1:]):
+            if b["price_krw"] < a["price_krw"]:
+                warnings.append(
+                    f"{dimm} PC4-{clock}: {a['capacity']}({a['price_krw']:,}원) > "
+                    f"{b['capacity']}({b['price_krw']:,}원) — 용량 큰데 더 쌈"
+                )
+
+    if warnings:
+        print(f"\n⚠️  가격 역전 감지 ({len(warnings)}건) — 매칭이 잘못됐을 가능성이 있으니 확인 필요:")
+        for w in warnings:
+            print(f"   - {w}")
+    else:
+        print("\n✅ 가격 역전 없음 (용량/클럭 순서 정상)")
 
 
 def main():
@@ -199,7 +243,7 @@ def main():
         item = collect_one(dimm_type, clock, capacity)
         if item:
             items.append(item)
-            print(f"    -> {item['price_krw']:,}원")
+            print(f"    -> {item['price_krw']:,}원 | {item.get('matched_text', '')}")
         else:
             print(f"    -> 못 찾음 (스킵)")
         time.sleep(REQUEST_DELAY)
@@ -209,6 +253,7 @@ def main():
         return
 
     print(f"\n총 {len(items)}/{len(combos)}개 조합 수집 완료")
+    sanity_check(items)
     latest, history = merge_and_save("ram", SITE, items)
     print(f"저장 완료 (dataset=ram, site={SITE}). 히스토리 누적 {len(history['entries'])}일치")
 
