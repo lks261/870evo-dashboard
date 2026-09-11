@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-09-10T17:03:31.681186+09:00",
-  "updated_at_display": "2026-09-10 17:03",
+  "updated_at": "2026-09-11T09:21:33.409937+09:00",
+  "updated_at_display": "2026-09-11 09:21",
   "items": [
     {
       "site": "다나와",
@@ -28,7 +28,7 @@
       "dimm_type": "RDIMM",
       "clock": "17000",
       "capacity": "32GB",
-      "price_krw": 178800,
+      "price_krw": 238800,
       "pcode": null,
       "url": "https://search.danawa.com/dsearch.php?k1=삼성전자 서버용 DDR4 32GB PC4-17000 REG ECC"
     },

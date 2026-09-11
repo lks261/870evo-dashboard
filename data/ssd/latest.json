@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-09-10T17:01:45.714398+09:00",
-  "updated_at_display": "2026-09-10 17:01",
+  "updated_at": "2026-09-11T09:19:47.721890+09:00",
+  "updated_at_display": "2026-09-11 09:19",
   "items": [
     {
       "site": "다나와",
@@ -14,7 +14,7 @@
       "site": "다나와",
       "source_type": "병행수입",
       "capacity": "500GB",
-      "price_krw": 285000,
+      "price_krw": 280000,
       "pcode": "13312010",
       "url": "https://prod.danawa.com/info/?pcode=13312010&cate=112760"
     },
@@ -22,7 +22,7 @@
       "site": "다나와",
       "source_type": "병행수입",
       "capacity": "1TB",
-      "price_krw": 405000,
+      "price_krw": 395000,
       "pcode": "13311974",
       "url": "https://prod.danawa.com/info/?pcode=13311974&cate=112760"
     },
@@ -30,7 +30,7 @@
       "site": "다나와",
       "source_type": "병행수입",
       "capacity": "2TB",
-      "price_krw": 1018260,
+      "price_krw": 1018210,
       "pcode": "13417007",
       "url": "https://prod.danawa.com/info/?pcode=13417007&cate=112760"
     },
@@ -54,7 +54,7 @@
       "site": "다나와",
       "source_type": "정품",
       "capacity": "250GB",
-      "price_krw": 215000,
+      "price_krw": 214990,
       "pcode": "13190384",
       "url": "https://prod.danawa.com/info/?pcode=13190384&cate=112760"
     },
@@ -70,7 +70,7 @@
       "site": "다나와",
       "source_type": "정품",
       "capacity": "1TB",
-      "price_krw": 408140,
+      "price_krw": 404990,
       "pcode": "13190573",
       "url": "https://prod.danawa.com/info/?pcode=13190573&cate=112760"
     },
@@ -86,7 +86,7 @@
       "site": "다나와",
       "source_type": "정품",
       "capacity": "4TB",
-      "price_krw": 1928950,
+      "price_krw": 1873900,
       "pcode": "13190711",
       "url": "https://prod.danawa.com/info/?pcode=13190711&cate=112760"
     },
@@ -94,7 +94,7 @@
       "site": "다나와",
       "source_type": "정품",
       "capacity": "8TB",
-      "price_krw": 4849880,
+      "price_krw": 4849810,
       "pcode": "106736903",
       "url": "https://prod.danawa.com/info/?pcode=106736903&cate=112760"
     },
