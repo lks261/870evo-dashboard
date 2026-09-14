@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-09-13T12:08:38.543994+09:00",
-  "updated_at_display": "2026-09-13 12:08",
+  "updated_at": "2026-09-14T09:20:29.835722+09:00",
+  "updated_at_display": "2026-09-14 09:20",
   "items": [
     {
       "site": "다나와",
@@ -30,7 +30,7 @@
       "site": "다나와",
       "source_type": "병행수입",
       "capacity": "2TB",
-      "price_krw": 1018190,
+      "price_krw": 1018170,
       "pcode": "13417007",
       "url": "https://prod.danawa.com/info/?pcode=13417007&cate=112760"
     },
@@ -70,7 +70,7 @@
       "site": "다나와",
       "source_type": "정품",
       "capacity": "1TB",
-      "price_krw": 404770,
+      "price_krw": 404720,
       "pcode": "13190573",
       "url": "https://prod.danawa.com/info/?pcode=13190573&cate=112760"
     },
@@ -94,7 +94,7 @@
       "site": "다나와",
       "source_type": "정품",
       "capacity": "8TB",
-      "price_krw": 4849750,
+      "price_krw": 4849730,
       "pcode": "106736903",
       "url": "https://prod.danawa.com/info/?pcode=106736903&cate=112760"
     },
