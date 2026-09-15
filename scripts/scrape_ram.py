@@ -49,13 +49,18 @@ CLOCK_MHZ = {
     "17000": "2133",
     "19200": "2400",
     "21300": "2666",
+    "23400": "2933",
     "25600": "3200",
 }
 DIMM_CLOCKS = {
     "RDIMM": ["17000", "19200", "21300", "25600"],
-    "EDIMM": ["19200", "21300", "25600"],
+    "EDIMM": ["19200", "21300", "23400", "25600"],
 }
-VALID_CAPACITIES = {"8GB", "16GB", "32GB", "64GB"}
+# DIMM 타입별로 수집할 용량 범위가 다름 (EDIMM은 64GB 제외, 8/16/32GB만)
+VALID_CAPACITIES_BY_DIMM = {
+    "RDIMM": {"8GB", "16GB", "32GB", "64GB"},
+    "EDIMM": {"8GB", "16GB", "32GB"},
+}
 EXCLUDE_KEYWORDS = ["중고", "해외", "리퍼", "벌크"]  # 신뢰도 낮은 리스팅 제외
 
 CAPACITY_PATTERN = re.compile(r"(\d+)\s*GB", re.IGNORECASE)
@@ -142,7 +147,7 @@ def parse_capacity_variants(block, dimm_type: str, clock: str) -> list[dict]:
             continue
 
         capacity = f"{cap_match.group(1)}GB"
-        if capacity not in VALID_CAPACITIES:
+        if capacity not in VALID_CAPACITIES_BY_DIMM[dimm_type]:
             continue
 
         price = int(price_match.group(1).replace(",", ""))
@@ -172,22 +177,28 @@ def collect_combo(dimm_type: str, clock: str) -> list[dict]:
     soup = BeautifulSoup(html, "html.parser")
     blocks = find_target_blocks(soup, dimm_type)
 
-    # 용량 옵션이 2개 이상 묶인 "가격비교 그룹"만 채택 (단품 리스팅은 노이즈)
-    best_group = None
+    # 같은 상품이 '이미지 카드'/'VS상품비교 팝업' 등 여러 블록에 중복 노출되는데,
+    # 블록마다 보이는 용량 옵션이 서로 다를 수 있다(한쪽엔 8GB가 없고 다른쪽엔 있는 식).
+    # 그래서 블록 하나만 고르지 않고, 용량 옵션이 2개 이상인 블록들을 전부 모아서
+    # "용량별 최저가"로 병합한다 — 이러면 누락도 줄고, 같은 용량이 중복으로
+    # 잡혀도(같은 상품이 여러 블록에 찍혀서) 자동으로 한 줄로 합쳐진다.
+    best_by_capacity = {}
     for block in blocks:
         variants = parse_capacity_variants(block, dimm_type, clock)
         if len(variants) < 2:
-            continue
-        if best_group is None or len(variants) > len(best_group):
-            best_group = variants
+            continue  # 옵션 1개짜리 단품 리스팅은 노이즈로 보고 제외
+        for v in variants:
+            cap = v["capacity"]
+            if cap not in best_by_capacity or v["price_krw"] < best_by_capacity[cap]["price_krw"]:
+                best_by_capacity[cap] = v
 
-    return best_group or []
+    return list(best_by_capacity.values())
 
 
 def sanity_check(items: list[dict]):
     """가격 역전(용량/클럭 순서가 말이 안 되는 경우)을 감지해서 경고만 남긴다."""
     warnings = []
-    clock_order = {"17000": 0, "19200": 1, "21300": 2, "25600": 3}
+    clock_order = {"17000": 0, "19200": 1, "21300": 2, "23400": 3, "25600": 4}
     cap_order = {"8GB": 0, "16GB": 1, "32GB": 2, "64GB": 3}
 
     by_dimm_cap, by_dimm_clock = {}, {}
