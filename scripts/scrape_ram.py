@@ -68,7 +68,8 @@ def has_excluded_keyword(text: str) -> bool:
 
 def build_query(dimm_type: str, clock: str) -> str:
     mhz = CLOCK_MHZ[clock]
-    reg_kw = "REG" if dimm_type == "RDIMM" else "UDIMM"  # 검색어는 업계 표준 용어(UDIMM) 사용
+    # 다나와 실제 상품명은 "UDIMM"이 아니라 "ECC/Unbuffered"로 표기됨 (REG는 실제 표기와 일치)
+    reg_kw = "REG" if dimm_type == "RDIMM" else "Unbuffered"
     return f"삼성전자 DDR4-{mhz} ECC {reg_kw}"
 
 
