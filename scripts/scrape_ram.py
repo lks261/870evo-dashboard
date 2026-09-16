@@ -64,7 +64,10 @@ VALID_CAPACITIES_BY_DIMM = {
 EXCLUDE_KEYWORDS = ["중고", "해외", "리퍼", "벌크"]  # 신뢰도 낮은 리스팅 제외
 
 CAPACITY_PATTERN = re.compile(r"(\d+)\s*GB", re.IGNORECASE)
-PRICE_PATTERN = re.compile(r"([\d,]+)\s*원")
+# "15,469원/1GB" 같은 단가 표기는 총액이 아니므로 절대 총액으로 잡히면 안 됨.
+# 부정형 전방탐색(negative lookahead)으로 "/1GB"가 바로 뒤에 붙지 않는 "숫자원"만 총액으로 인정.
+TOTAL_PRICE_PATTERN = re.compile(r"([\d,]+)\s*원(?!\s*/\s*1GB)")
+UNIT_PRICE_PATTERN = re.compile(r"([\d,]+)\s*원\s*/\s*1GB")
 
 
 def has_excluded_keyword(text: str) -> bool:
@@ -168,15 +171,25 @@ def parse_capacity_variants(block, dimm_type: str, clock: str) -> list[dict]:
             continue
 
         cap_match = CAPACITY_PATTERN.search(text)
-        price_match = PRICE_PATTERN.search(text)
-        if not (cap_match and price_match):
+        if not cap_match:
             continue
 
-        capacity = f"{cap_match.group(1)}GB"
+        capacity_gb = int(cap_match.group(1))
+        capacity = f"{capacity_gb}GB"
         if capacity not in VALID_CAPACITIES_BY_DIMM[dimm_type]:
             continue
 
-        price = int(price_match.group(1).replace(",", ""))
+        # 총액("543,000원")이 범위 안에 있으면 그걸 쓰고, 없으면(단가만 보이는 좁은
+        # 범위일 때) 단가("15,469원/1GB") x 용량으로 총액을 역산한다.
+        total_match = TOTAL_PRICE_PATTERN.search(text)
+        if total_match:
+            price = int(total_match.group(1).replace(",", ""))
+        else:
+            unit_match = UNIT_PRICE_PATTERN.search(text)
+            if not unit_match:
+                continue
+            unit_price = int(unit_match.group(1).replace(",", ""))
+            price = unit_price * capacity_gb  # 단가 x 용량 = 총액 추정
 
         results.append({
             "site": SITE,
