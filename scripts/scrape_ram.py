@@ -119,6 +119,30 @@ def find_target_blocks(soup: BeautifulSoup, dimm_type: str):
     return matched
 
 
+def find_unique_scope(a):
+    """이 pcode 링크 하나만 포함하는 가장 좁은 범위를 찾는다.
+    다나와가 여러 용량 옵션을 하나의 li 안에 같이 묶어서 렌더링하는 경우가 있는데,
+    그럴 때 find_parent('li') 텍스트를 그대로 쓰면 다른 옵션의 용량/가격이 섞여서
+    엉뚱한 pcode에 엉뚱한 용량이 붙는 문제가 생긴다 (실제로 EDIMM 32GB가 8GB 상품
+    링크로 잘못 연결된 사례로 확인됨). 그래서 "pcode 링크가 정확히 1개만 있는"
+    가장 좁은 컨테이너를 찾아서 그 범위의 텍스트만 신뢰한다. 끝까지 못 찾으면
+    이 옵션은 신뢰할 수 없다고 보고 건너뛴다(포기)."""
+    candidates = [a, a.parent]
+    li_parent = a.find_parent("li")
+    if li_parent:
+        candidates.append(li_parent)
+        if li_parent.parent:
+            candidates.append(li_parent.parent)
+
+    for scope in candidates:
+        if scope is None:
+            continue
+        pcode_links = scope.select("a[href*='pcode=']")
+        if len(pcode_links) == 1:
+            return scope
+    return None  # 끝까지 모호하면 포기
+
+
 def parse_capacity_variants(block, dimm_type: str, clock: str) -> list[dict]:
     """SSD 스크래퍼의 parse_capacity_variants와 동일한 방식.
     한 '가격비교 그룹' 블록 안의 용량별 옵션(pcode 링크)들을 파싱한다."""
@@ -135,8 +159,10 @@ def parse_capacity_variants(block, dimm_type: str, clock: str) -> list[dict]:
         if pcode in seen_pcodes:
             continue
 
-        container = a.find_parent("li") or a.parent
-        text = container.get_text(" ", strip=True)
+        scope = find_unique_scope(a)
+        if scope is None:
+            continue  # 이 옵션 하나만 딱 집을 수 있는 범위를 못 찾음 -> 신뢰 못 함, 건너뜀
+        text = scope.get_text(" ", strip=True)
 
         if has_excluded_keyword(text):
             continue
@@ -184,9 +210,10 @@ def collect_combo(dimm_type: str, clock: str) -> list[dict]:
     # 잡혀도(같은 상품이 여러 블록에 찍혀서) 자동으로 한 줄로 합쳐진다.
     best_by_capacity = {}
     for block in blocks:
+        raw_link_count = len(block.select("a[href*='pcode=']"))
+        if raw_link_count < 2:
+            continue  # 옵션 1개짜리 단품 리스팅은 노이즈로 보고 제외 (원본 링크 개수 기준)
         variants = parse_capacity_variants(block, dimm_type, clock)
-        if len(variants) < 2:
-            continue  # 옵션 1개짜리 단품 리스팅은 노이즈로 보고 제외
         for v in variants:
             cap = v["capacity"]
             if cap not in best_by_capacity or v["price_krw"] < best_by_capacity[cap]["price_krw"]:

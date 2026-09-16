@@ -17,6 +17,11 @@
     전체 옵션이 노출되는 걸 확인했으므로, 그 페이지 하나만 가져와 옵션 목록을 파싱한다.
     나중에 컴퓨존이 이 상품을 단종하거나 URL 구조를 바꾸면 REP_PRODUCT_NO를 다시
     확인해서 갱신해야 한다.
+
+    각 용량 옵션은 onclick="detail_show('755258')" 처럼 자기 자신의 ProductNo를
+    따로 갖고 있어서, 클릭하면 그 용량의 실제 상세페이지로 이동한다. 예전 버전은
+    이 개별 ProductNo를 못 읽어와서 모든 용량이 대표 상품(1TB) 링크로 잘못
+    연결되는 문제가 있었는데, 이번에 onclick 속성에서 직접 추출하도록 고쳤다.
 """
 
 import re
@@ -55,6 +60,11 @@ HEADERS = {
 
 VALID_CAPACITIES = set(CAPACITY_ORDER.keys())
 OPTION_PATTERN = re.compile(r"\[\s*(\d+(?:\.\d+)?\s*(?:GB|TB))\s*\]\s*([\d,]+)\s*원")
+DETAIL_SHOW_PATTERN = re.compile(r"detail_show\('(\d+)'\)")
+
+
+def product_url(product_no: str) -> str:
+    return f"https://www.compuzone.co.kr/product/product_detail.htm?ProductNo={product_no}&opt_chk=Y"
 
 
 def fetch_product_page() -> str:
@@ -89,26 +99,60 @@ def parse_options(html: str) -> list[dict]:
         print(f"경고: 페이지 제목이 예상과 다릅니다 ('{title}'). "
               f"REP_PRODUCT_NO가 더 이상 유효하지 않을 수 있습니다.")
 
-    text = soup.get_text(" ", strip=True)
-    matches = OPTION_PATTERN.findall(text)
-
     results = []
     seen_caps = set()
-    for cap_raw, price_raw in matches:
-        capacity = cap_raw.replace(" ", "").upper()
-        if capacity not in VALID_CAPACITIES:
+
+    # 1순위: onclick="detail_show('ProductNo')" 요소에서 용량별 ProductNo를 직접 추출.
+    # (예전 버전은 이게 없어서 모든 용량이 대표 상품 링크로 잘못 연결되는 문제가 있었음)
+    option_elements = soup.find_all(onclick=DETAIL_SHOW_PATTERN)
+    for el in option_elements:
+        product_no_match = DETAIL_SHOW_PATTERN.search(el.get("onclick", ""))
+        if not product_no_match:
             continue
-        if capacity in seen_caps:
-            continue  # 페이지 내 같은 옵션이 중복 노출되는 경우 첫 값만 사용
-        seen_caps.add(capacity)
-        price = int(price_raw.replace(",", ""))
+        product_no = product_no_match.group(1)
+
+        # 이 요소 근처(자기 자신 -> 없으면 부모)에서 용량/가격을 찾는다
+        text = el.get_text(" ", strip=True)
+        m = OPTION_PATTERN.search(text)
+        if not m and el.parent:
+            text = el.parent.get_text(" ", strip=True)
+            m = OPTION_PATTERN.search(text)
+        if not m:
+            continue
+
+        capacity = m.group(1).replace(" ", "").upper()
+        if capacity not in VALID_CAPACITIES or capacity in seen_caps:
+            continue
+        price = int(m.group(2).replace(",", ""))
+
         results.append({
             "site": SITE,
             "source_type": SOURCE_TYPE,
             "capacity": capacity,
             "price_krw": price,
-            "url": PRODUCT_DETAIL_URL,
+            "url": product_url(product_no),
         })
+        seen_caps.add(capacity)
+
+    # 2순위(안전망): 위 방식으로 하나도 못 찾았으면, 기존처럼 텍스트 통째 정규식으로
+    # 최소한 가격 정보만이라도 확보한다 (이 경우 링크는 대표 상품 페이지로 대체됨)
+    if not results:
+        text = soup.get_text(" ", strip=True)
+        for cap_raw, price_raw in OPTION_PATTERN.findall(text):
+            capacity = cap_raw.replace(" ", "").upper()
+            if capacity not in VALID_CAPACITIES or capacity in seen_caps:
+                continue
+            seen_caps.add(capacity)
+            results.append({
+                "site": SITE,
+                "source_type": SOURCE_TYPE,
+                "capacity": capacity,
+                "price_krw": int(price_raw.replace(",", "")),
+                "url": PRODUCT_DETAIL_URL,  # 안전망 경로에서는 개별 링크를 못 구해 대표 링크 사용
+            })
+        if results:
+            print("경고: 용량별 개별 링크(ProductNo)를 못 찾아서 대표 상품 링크로 대체했습니다.")
+
     return results
 
 
