@@ -72,6 +72,18 @@
   }
   td.link-cell a{ color:var(--teal-700); font-weight:600; font-size:12px; text-decoration:none; }
   td.link-cell a:hover{ text-decoration:underline; }
+
+  .update-banner{
+    position:fixed; left:50%; bottom:24px; transform:translateX(-50%);
+    background:var(--teal-900); color:white; border-radius:999px;
+    padding:12px 18px; font-size:13px; display:flex; align-items:center; gap:14px;
+    box-shadow:0 6px 20px rgba(0,0,0,.18); z-index:1000; max-width:92vw;
+  }
+  .update-banner button{
+    border:none; background:white; color:var(--teal-900); border-radius:999px;
+    padding:6px 14px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;
+  }
+  .update-banner button:hover{ opacity:.85; }
 </style>
 </head>
 <body>
@@ -472,6 +484,52 @@ document.getElementById('ramDimmSelect').addEventListener('change', ()=>{
 });
 
 // 시작 시 SSD 탭 데이터만 우선 로드 (RAM은 탭 클릭 시 로드)
+// ============ 새 데이터 알림 ============
+// 창을 띄워놓은 채로 오래 두면, 그 사이 자동 수집이 돌아 새 데이터가 올라와도
+// 화면은 옛날 데이터를 보여주게 된다. 그래서 주기적으로 서버의 updated_at만
+// 확인해서, 지금 보고 있는 것보다 최신이면 새로고침 배너를 띄운다.
+const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5분마다 확인
+
+function showUpdateBanner(){
+  if(document.getElementById('updateBanner')) return; // 이미 떠 있으면 중복 생성 안 함
+  const banner = document.createElement('div');
+  banner.id = 'updateBanner';
+  banner.className = 'update-banner';
+  banner.innerHTML = `
+    <span>🔔 새로 수집된 데이터가 있습니다. 새로고침하면 최신 가격을 볼 수 있어요.</span>
+    <button id="updateReloadBtn">새로고침</button>
+  `;
+  document.body.appendChild(banner);
+  document.getElementById('updateReloadBtn').addEventListener('click', ()=> location.reload());
+}
+
+async function checkForUpdates(){
+  try{
+    const seen = {
+      ssd: window.__ssdLatest ? window.__ssdLatest.updated_at : null,
+      ram: window.__ramLatest ? window.__ramLatest.updated_at : null,
+    };
+    for(const dataset of ['ssd','ram']){
+      if(!seen[dataset]) continue; // 아직 안 불러온 탭은 건너뜀
+      const res = await fetch(`data/${dataset}/latest.json?t=${Date.now()}`);
+      if(!res.ok) continue;
+      const fresh = await res.json();
+      if(fresh.updated_at && fresh.updated_at !== seen[dataset]){
+        showUpdateBanner();
+        return;
+      }
+    }
+  }catch(err){
+    // 네트워크 일시 오류 등은 조용히 넘어간다 (다음 주기에 다시 확인)
+  }
+}
+
+setInterval(checkForUpdates, UPDATE_CHECK_INTERVAL_MS);
+// 다른 탭 보다가 돌아왔을 때도 한 번 확인 (오래 방치했다 돌아오는 경우 대응)
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState === 'visible') checkForUpdates();
+});
+
 loadAndRenderSSD();
 </script>
 </body>

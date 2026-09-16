@@ -40,6 +40,19 @@ SOURCE_TYPE = "정품"  # 컴퓨존은 이 라인업(공식인증 정품)만 수
 
 REP_PRODUCT_NO = 755257  # [1TB] 공식인증 870 EVO SATA
 
+# 용량별 ProductNo 고정 매핑.
+# 페이지에서 자동 추출(onclick="detail_show('...')")이 안 될 때가 있어서,
+# 실제로 각 옵션 페이지를 하나씩 열어 확인한 값을 여기에 박아둔다.
+# 컴퓨존이 상품을 단종/교체하면 이 표만 고치면 된다.
+CAPACITY_PRODUCT_NO = {
+    "250GB": "755258",
+    "500GB": "755259",
+    "1TB": "755257",
+    "2TB": "755256",
+    "4TB": "755256",   # TODO: 2TB와 값이 같음 — 실제 4TB ProductNo 확인 후 교체 필요
+    "8TB": "1325879",
+}
+
 # 데스크톱이 막힐 경우를 대비해 모바일 서브도메인도 순서대로 시도한다
 CANDIDATE_URLS = [
     f"https://www.compuzone.co.kr/product/product_detail.htm?ProductNo={REP_PRODUCT_NO}",
@@ -91,6 +104,20 @@ def fetch_product_page() -> str:
     )
 
 
+def resolve_url(capacity: str, extracted_product_no: str | None = None) -> str:
+    """이 용량의 상품 URL을 정한다.
+    1순위: 직접 확인해서 고정해둔 CAPACITY_PRODUCT_NO 매핑
+    2순위: 페이지에서 자동 추출한 ProductNo
+    3순위: 대표 상품 페이지 (최후 수단)
+    """
+    fixed = CAPACITY_PRODUCT_NO.get(capacity)
+    if fixed:
+        return product_url(fixed)
+    if extracted_product_no:
+        return product_url(extracted_product_no)
+    return PRODUCT_DETAIL_URL
+
+
 def parse_options(html: str) -> list[dict]:
     soup = BeautifulSoup(html, "html.parser")
     title = soup.title.get_text(strip=True) if soup.title else ""
@@ -103,7 +130,6 @@ def parse_options(html: str) -> list[dict]:
     seen_caps = set()
 
     # 1순위: onclick="detail_show('ProductNo')" 요소에서 용량별 ProductNo를 직접 추출.
-    # (예전 버전은 이게 없어서 모든 용량이 대표 상품 링크로 잘못 연결되는 문제가 있었음)
     option_elements = soup.find_all(onclick=DETAIL_SHOW_PATTERN)
     for el in option_elements:
         product_no_match = DETAIL_SHOW_PATTERN.search(el.get("onclick", ""))
@@ -130,12 +156,12 @@ def parse_options(html: str) -> list[dict]:
             "source_type": SOURCE_TYPE,
             "capacity": capacity,
             "price_krw": price,
-            "url": product_url(product_no),
+            "url": resolve_url(capacity, product_no),
         })
         seen_caps.add(capacity)
 
     # 2순위(안전망): 위 방식으로 하나도 못 찾았으면, 기존처럼 텍스트 통째 정규식으로
-    # 최소한 가격 정보만이라도 확보한다 (이 경우 링크는 대표 상품 페이지로 대체됨)
+    # 가격을 확보한다. 링크는 고정 매핑이 있으므로 이 경우에도 용량별로 정확하다.
     if not results:
         text = soup.get_text(" ", strip=True)
         for cap_raw, price_raw in OPTION_PATTERN.findall(text):
@@ -148,10 +174,10 @@ def parse_options(html: str) -> list[dict]:
                 "source_type": SOURCE_TYPE,
                 "capacity": capacity,
                 "price_krw": int(price_raw.replace(",", "")),
-                "url": PRODUCT_DETAIL_URL,  # 안전망 경로에서는 개별 링크를 못 구해 대표 링크 사용
+                "url": resolve_url(capacity),  # 고정 매핑 덕분에 이 경로에서도 용량별 링크가 정확함
             })
         if results:
-            print("경고: 용량별 개별 링크(ProductNo)를 못 찾아서 대표 상품 링크로 대체했습니다.")
+            print("참고: 자동 추출 대신 고정 매핑(CAPACITY_PRODUCT_NO)으로 링크를 구성했습니다.")
 
     return results
 
