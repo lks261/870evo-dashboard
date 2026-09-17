@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-09-16T16:56:57.032736+09:00",
-  "updated_at_display": "2026-09-16 16:56",
+  "updated_at": "2026-09-17T09:18:21.212840+09:00",
+  "updated_at_display": "2026-09-17 09:18",
   "items": [
     {
       "site": "컴퓨존",
@@ -49,7 +49,7 @@
       "site": "다나와",
       "source_type": "병행수입",
       "capacity": "500GB",
-      "price_krw": 280000,
+      "price_krw": 287190,
       "pcode": "13312010",
       "url": "https://prod.danawa.com/info/?pcode=13312010&cate=112760"
     },
@@ -65,7 +65,7 @@
       "site": "다나와",
       "source_type": "병행수입",
       "capacity": "2TB",
-      "price_krw": 989950,
+      "price_krw": 989990,
       "pcode": "13417007",
       "url": "https://prod.danawa.com/info/?pcode=13417007&cate=112760"
     },
@@ -105,7 +105,7 @@
       "site": "다나와",
       "source_type": "정품",
       "capacity": "1TB",
-      "price_krw": 396980,
+      "price_krw": 396990,
       "pcode": "13190573",
       "url": "https://prod.danawa.com/info/?pcode=13190573&cate=112760"
     },
@@ -113,7 +113,7 @@
       "site": "다나와",
       "source_type": "정품",
       "capacity": "2TB",
-      "price_krw": 1029200,
+      "price_krw": 1037770,
       "pcode": "13190630",
       "url": "https://prod.danawa.com/info/?pcode=13190630&cate=112760"
     },
@@ -129,7 +129,7 @@
       "site": "다나와",
       "source_type": "정품",
       "capacity": "8TB",
-      "price_krw": 4848880,
+      "price_krw": 4848870,
       "pcode": "106736903",
       "url": "https://prod.danawa.com/info/?pcode=106736903&cate=112760"
     }
