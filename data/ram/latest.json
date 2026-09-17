@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-09-16T16:38:27.556332+09:00",
-  "updated_at_display": "2026-09-16 16:38",
+  "updated_at": "2026-09-17T09:21:32.933097+09:00",
+  "updated_at_display": "2026-09-17 09:21",
   "items": [
     {
       "site": "다나와",
@@ -30,9 +30,9 @@
       "dimm_type": "RDIMM",
       "clock": "17000",
       "capacity": "8GB",
-      "price_krw": 84000,
+      "price_krw": 126800,
       "pcode": "3201319",
-      "matched_text": "1위 8GB 10,500원/1GB",
+      "matched_text": "1위 8GB 15,850원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=3201319"
     },
     {
@@ -184,9 +184,9 @@
       "dimm_type": "EDIMM",
       "clock": "23400",
       "capacity": "32GB",
-      "price_krw": 1044992,
+      "price_krw": 1056000,
       "pcode": "15798590",
-      "matched_text": "2위 32GB 32,656원/1GB",
+      "matched_text": "2위 32GB 33,000원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=15798590"
     },
     {
@@ -206,9 +206,9 @@
       "dimm_type": "EDIMM",
       "clock": "23400",
       "capacity": "8GB",
-      "price_krw": 240088,
+      "price_krw": 242624,
       "pcode": "13826867",
-      "matched_text": "8GB 30,011원/1GB",
+      "matched_text": "8GB 30,328원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=13826867"
     },
     {
