@@ -118,6 +118,15 @@
       </div>
       <canvas id="ssdTrendChart"></canvas>
     </div>
+
+    <div class="card">
+      <h2>구분별 전체 용량 추이 (부가세포함)</h2>
+      <div class="chart-controls">
+        <label>구분</label>
+        <select id="ssdSourceSelect"></select>
+      </div>
+      <canvas id="ssdSourceTrendChart"></canvas>
+    </div>
   </div>
 
   <!-- ===================== RAM 탭 ===================== -->
@@ -330,6 +339,56 @@ function renderSSDTrendChart(history, capacity){
   });
 }
 
+let ssdSourceTrendChart = null;
+
+// 용량별 색상 (SSD 6개 용량 고정 팔레트)
+const CAPACITY_COLOR = {
+  '250GB': '#f2846b', '500GB': '#e8b84b', '1TB': '#8fbf9f',
+  '2TB': '#7ab8d9', '4TB': '#a893c9', '8TB': '#e88fa8',
+};
+
+function populateSSDSourceSelect(){
+  const select = document.getElementById('ssdSourceSelect');
+  select.innerHTML = SOURCE_ORDER.map((s,i)=>`<option value="${i}">${s.label}</option>`).join('');
+}
+
+function renderSSDSourceTrendChart(history, sourceIndex){
+  const s = SOURCE_ORDER[sourceIndex];
+  const entries = (history.entries || []).slice().sort((a,b)=> a.date.localeCompare(b.date));
+  const dates = entries.map(e=>e.date);
+
+  const caps = new Set();
+  entries.forEach(e => (e.items||[]).forEach(it=>{
+    if(it.site === s.site && it.source_type === s.source_type) caps.add(it.capacity);
+  }));
+  const sortedCaps = [...caps].sort((a,b)=> capacitySortKey(a) - capacitySortKey(b));
+
+  const seriesFor = (capacity) => entries.map(e=>{
+    const item = (e.items||[]).find(it => it.capacity===capacity && it.site===s.site && it.source_type===s.source_type);
+    return item ? item.price_krw : null;
+  });
+
+  const datasets = sortedCaps.map(cap => ({
+    label: cap,
+    data: seriesFor(cap),
+    borderColor: CAPACITY_COLOR[cap] || '#888',
+    backgroundColor: CAPACITY_COLOR[cap] || '#888',
+    spanGaps: true,
+    tension: 0.25,
+  }));
+
+  if(ssdSourceTrendChart) ssdSourceTrendChart.destroy();
+  ssdSourceTrendChart = new Chart(document.getElementById('ssdSourceTrendChart'), {
+    type: 'line',
+    data: { labels: dates, datasets },
+    options: {
+      responsive: true,
+      plugins: { legend: { position:'bottom' } },
+      scales: { y: { ticks: { callback: v => v.toLocaleString('ko-KR') + '원' } } }
+    }
+  });
+}
+
 async function loadAndRenderSSD(){
   try{
     const {latest, history} = await loadDataset('ssd', false);
@@ -339,6 +398,8 @@ async function loadAndRenderSSD(){
     renderSSDTable(latest, history);
     populateSSDCapacitySelect(history);
     renderSSDTrendChart(history, document.getElementById('ssdCapacitySelect').value);
+    populateSSDSourceSelect();
+    renderSSDSourceTrendChart(history, document.getElementById('ssdSourceSelect').value);
   }catch(err){
     document.getElementById('ssdTableArea').innerHTML = `<div class="error">데이터를 불러오지 못했습니다: ${err.message}</div>`;
   }
@@ -346,6 +407,9 @@ async function loadAndRenderSSD(){
 
 document.getElementById('ssdCapacitySelect').addEventListener('change', (e)=>{
   if(ssdHistory) renderSSDTrendChart(ssdHistory, e.target.value);
+});
+document.getElementById('ssdSourceSelect').addEventListener('change', (e)=>{
+  if(ssdHistory) renderSSDSourceTrendChart(ssdHistory, e.target.value);
 });
 
 // ============ RAM 탭 ============
