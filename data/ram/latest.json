@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-09-28T09:24:07.557767+09:00",
-  "updated_at_display": "2026-09-28 09:24",
+  "updated_at": "2026-09-29T09:22:58.661106+09:00",
+  "updated_at_display": "2026-09-29 09:22",
   "items": [
     {
       "site": "다나와",
@@ -19,9 +19,9 @@
       "dimm_type": "RDIMM",
       "clock": "17000",
       "capacity": "16GB",
-      "price_krw": 239008,
+      "price_krw": 315008,
       "pcode": "3201268",
-      "matched_text": "2위 16GB 14,938원/1GB",
+      "matched_text": "2위 16GB 19,688원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=3201268"
     },
     {
@@ -85,9 +85,9 @@
       "dimm_type": "RDIMM",
       "clock": "21300",
       "capacity": "16GB",
-      "price_krw": 269008,
+      "price_krw": 270000,
       "pcode": "6393108",
-      "matched_text": "2위 16GB 16,813원/1GB",
+      "matched_text": "2위 16GB 16,875원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=6393108"
     },
     {
@@ -129,9 +129,9 @@
       "dimm_type": "RDIMM",
       "clock": "25600",
       "capacity": "16GB",
-      "price_krw": 296000,
+      "price_krw": 300000,
       "pcode": "13432766",
-      "matched_text": "16GB 18,500원/1GB",
+      "matched_text": "16GB 18,750원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=13432766"
     },
     {
