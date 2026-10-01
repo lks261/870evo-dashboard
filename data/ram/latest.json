@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-09-30T09:23:33.065283+09:00",
-  "updated_at_display": "2026-09-30 09:23",
+  "updated_at": "2026-10-01T09:22:15.963345+09:00",
+  "updated_at_display": "2026-10-01 09:22",
   "items": [
     {
       "site": "다나와",
@@ -10,7 +10,7 @@
       "capacity": "32GB",
       "price_krw": 495008,
       "pcode": "5383117",
-      "matched_text": "32GB 15,469원/1GB",
+      "matched_text": "1위 32GB 15,469원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=5383117"
     },
     {
@@ -32,7 +32,7 @@
       "capacity": "8GB",
       "price_krw": 126800,
       "pcode": "3201319",
-      "matched_text": "1위 8GB 15,850원/1GB",
+      "matched_text": "8GB 15,850원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=3201319"
     },
     {
@@ -87,7 +87,7 @@
       "capacity": "16GB",
       "price_krw": 270000,
       "pcode": "6393108",
-      "matched_text": "2위 16GB 16,875원/1GB",
+      "matched_text": "16GB 16,875원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=6393108"
     },
     {
@@ -98,7 +98,7 @@
       "capacity": "8GB",
       "price_krw": 195000,
       "pcode": "11631620",
-      "matched_text": "8GB 24,375원/1GB",
+      "matched_text": "2위 8GB 24,375원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=11631620"
     },
     {
@@ -109,7 +109,7 @@
       "capacity": "64GB",
       "price_krw": 1571008,
       "pcode": "13433147",
-      "matched_text": "1위 64GB 24,547원/1GB",
+      "matched_text": "2위 64GB 24,547원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=13433147"
     },
     {
@@ -120,7 +120,7 @@
       "capacity": "32GB",
       "price_krw": 636992,
       "pcode": "13432970",
-      "matched_text": "2위 32GB 19,906원/1GB",
+      "matched_text": "1위 32GB 19,906원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=13432970"
     },
     {
@@ -184,9 +184,9 @@
       "dimm_type": "EDIMM",
       "clock": "23400",
       "capacity": "32GB",
-      "price_krw": 1023008,
+      "price_krw": 1056000,
       "pcode": "15798590",
-      "matched_text": "1위 32GB 31,969원/1GB",
+      "matched_text": "1위 32GB 33,000원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=15798590"
     },
     {
@@ -206,9 +206,9 @@
       "dimm_type": "EDIMM",
       "clock": "23400",
       "capacity": "8GB",
-      "price_krw": 233352,
+      "price_krw": 242624,
       "pcode": "13826867",
-      "matched_text": "2위 8GB 29,169원/1GB",
+      "matched_text": "2위 8GB 30,328원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=13826867"
     },
     {
