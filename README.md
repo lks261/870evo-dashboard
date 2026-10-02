@@ -1,26 +1,47 @@
 # 삼성 부품 가격 대시보드
 
-다나와/컴퓨존에서 **SSD(870 EVO)**와 **서버용 DDR4 RAM** 가격을 매일 자동으로
-수집해서, 탭으로 구분된 웹페이지로 공개하는 저장소입니다. 서버·VM 없이 GitHub
-무료 기능만으로 동작합니다.
+다나와/컴퓨존에서 **SSD(870 EVO)**와 **서버용 DDR4 RAM** 가격을 매일 자동으로,
+Fusion Worldwide "The Greensheet"에서 **시장동향**을 매달 자동으로 수집해서,
+탭으로 구분된 웹페이지로 공개하는 저장소입니다. 서버·VM 없이 GitHub 무료
+기능만으로 동작합니다.
 
 ## 구조
 
 ```
-.github/workflows/scrape.yml          ← 매일 자동 실행 스케줄 (한국시간 오전 9시)
-.github/workflows/retry_compuzone.yml ← 컴퓨존 실패 시 낮 12시에 재시도
-scripts/common.py                     ← 데이터셋(ssd/ram)별로 결과를 병합 저장하는 공용 유틸
-scripts/scrape_870evo.py              ← 다나와 SSD 크롤링 (정품/병행수입)
-scripts/scrape_compuzone.py           ← 컴퓨존 SSD 크롤링 (공식인증 정품 라인업)
-scripts/scrape_ram.py                 ← 다나와 서버용 DDR4 RAM 크롤링 (RDIMM/UDIMM)
-scripts/retry_compuzone_if_missing.py ← 컴퓨존 재시도용 헬퍼
-data/ssd/latest.json, history.json    ← SSD 최신/누적 데이터
-data/ram/latest.json, history.json    ← RAM 최신/누적 데이터
-index.html                            ← 공개될 대시보드 (SSD/RAM 탭)
+.github/workflows/scrape.yml              ← 매일 자동 실행 스케줄 (한국시간 오전 9시, SSD+RAM)
+.github/workflows/retry_compuzone.yml     ← 컴퓨존 실패 시 낮 12시에 재시도
+.github/workflows/scrape_market_news.yml  ← 매달 1일 자동 실행 (시장동향)
+scripts/common.py                         ← 데이터셋별로 결과를 병합 저장하는 공용 유틸
+scripts/scrape_870evo.py                  ← 다나와 SSD 크롤링 (정품/병행수입)
+scripts/scrape_compuzone.py               ← 컴퓨존 SSD 크롤링 (공식인증 정품 라인업)
+scripts/scrape_ram.py                     ← 다나와 서버용 DDR4 RAM 크롤링 (RDIMM/EDIMM)
+scripts/scrape_market_news.py             ← Greensheet 시장동향 크롤링 (메모리/스토리지/주요이슈)
+scripts/retry_compuzone_if_missing.py     ← 컴퓨존 재시도용 헬퍼
+data/ssd/latest.json, history.json        ← SSD 최신/누적 데이터
+data/ram/latest.json, history.json        ← RAM 최신/누적 데이터
+data/market_news/latest.json, history.json ← 시장동향 최신/누적 데이터
+index.html                                ← 공개될 대시보드 (SSD/RAM/시장동향 탭)
 ```
 
-품목군(SSD/RAM)마다 데이터 파일이 완전히 분리되어 있어서, 대시보드 상단
+품목군(SSD/RAM/시장동향)마다 데이터 파일이 완전히 분리되어 있어서, 대시보드 상단
 탭을 누르면 해당 데이터셋만 불러와 보여줍니다.
+
+## 시장동향 데이터에 대한 특이사항
+
+Fusion Worldwide의 월간 리포트 "The Greensheet"에서 **메모리(DRAM/RDIMM)**,
+**스토리지(SSD/NAND)**, **주요 이슈** 세 섹션만 골라 뽑습니다. 리포트 URL이
+매달 바뀌어서(`the-greensheet-2026년-9월` → 다음 달 `-10월`), 날짜로 계산해
+접속하지 않고 리소스 목록 페이지에서 최신 글 링크를 매번 찾는 방식을 씁니다.
+
+각 항목은 원문을 그대로 옮기지 않고 **핵심 문장(첫 문장) 또는 90자 이내로
+축약**해서 저장합니다. 자세한 내용이 필요하면 대시보드의 "출처" 링크로
+원문을 직접 확인하도록 안내합니다. 월간 리포트라 크롤링 주기도 **매달 1일
+1회**로만 실행합니다 (다나와/컴퓨존처럼 매일 도는 게 아님).
+
+**주의**: 실제 사이트 접속 테스트 없이 페이지 구조를 추정해서 만든 스크립트라,
+처음 실행했을 때 "경고: '메모리' 섹션을 못 찾았습니다" 같은 메시지가 뜨면
+`scripts/scrape_market_news.py`의 `find_section_bullets()` 탐색 방식을
+실제 페이지 구조에 맞게 조정해야 할 수 있습니다.
 
 ## SSD 데이터 형식
 

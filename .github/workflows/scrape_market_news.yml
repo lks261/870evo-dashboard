@@ -1,0 +1,38 @@
+name: 시장동향 수집 (Greensheet)
+
+# 월간 리포트이므로 하루 1회가 아니라 매달 1회만 실행한다.
+on:
+  schedule:
+    - cron: "0 1 1 * *"   # 매달 1일 UTC 01:00 = 한국시간(KST) 오전 10:00
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 파이썬 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 라이브러리 설치
+        run: pip install requests beautifulsoup4
+
+      - name: 시장동향 크롤링 실행
+        run: python scripts/scrape_market_news.py
+        continue-on-error: true
+
+      - name: 결과 커밋 & 푸시
+        if: always()
+        run: |
+          git config user.name "870evo-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/market_news/
+          git diff --staged --quiet && echo "변경 없음, 커밋 생략" || git commit -m "chore: 시장동향(Greensheet) 업데이트 $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push

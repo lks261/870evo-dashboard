@@ -84,6 +84,17 @@
     padding:6px 14px; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;
   }
   .update-banner button:hover{ opacity:.85; }
+
+  .news-meta{ font-size:12.5px; color:var(--ink-soft); margin-bottom:16px; }
+  .news-meta a{ color:var(--teal-700); font-weight:600; text-decoration:none; }
+  .news-meta a:hover{ text-decoration:underline; }
+  .news-section{ margin-bottom:20px; }
+  .news-section h3{
+    font-size:13px; color:var(--teal-900); margin:0 0 10px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .news-section ul{ margin:0; padding-left:20px; }
+  .news-section li{ font-size:13px; line-height:1.7; color:var(--ink); margin-bottom:6px; }
 </style>
 </head>
 <body>
@@ -101,6 +112,7 @@
   <div class="tabbar">
     <button class="tabbtn active" data-tab="ssd">SSD</button>
     <button class="tabbtn" data-tab="ram">서버 RAM</button>
+    <button class="tabbtn" data-tab="news">시장동향</button>
   </div>
 
   <!-- ===================== SSD 탭 ===================== -->
@@ -148,6 +160,16 @@
         </select>
       </div>
       <canvas id="ramTrendChart"></canvas>
+    </div>
+  </div>
+
+  <!-- ===================== 시장동향 탭 ===================== -->
+  <div class="tabpanel" id="tabpanel-news">
+    <div class="card">
+      <h2>이번 달 시장동향 요약</h2>
+      <div id="newsMetaArea" class="news-meta"></div>
+      <div id="newsArea"><div class="empty">불러오는 중...</div></div>
+      <p class="table-note">※ Fusion Worldwide "The Greensheet" 월간 리포트에서 메모리/스토리지/주요 이슈 섹션만 추려 짧게 요약한 내용입니다. 자세한 내용은 원문 링크를 참고하세요. 월 1회(매달 초) 자동 갱신됩니다.</p>
     </div>
   </div>
 </div>
@@ -215,8 +237,10 @@ function renderTimestamp(latest){
 const TAB_META = {
   ssd: { title: '삼성 870 EVO 가격 대시보드', desc: '' },
   ram: { title: '삼성전자 서버용 DDR4 RAM 가격 대시보드', desc: '' },
+  news: { title: '시장동향', desc: '' },
 };
 let ramLoaded = false;
+let newsLoaded = false;
 
 document.querySelectorAll('.tabbtn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -226,6 +250,7 @@ document.querySelectorAll('.tabbtn').forEach(btn=>{
     document.getElementById('pageTitle').textContent = TAB_META[tab].title;
     document.getElementById('pageDesc').textContent = TAB_META[tab].desc;
     if(tab === 'ram' && !ramLoaded){ ramLoaded = true; loadAndRenderRAM(); }
+    if(tab === 'news' && !newsLoaded){ newsLoaded = true; loadAndRenderNews(); }
     if(tab === 'ssd') renderTimestamp(window.__ssdLatest || {});
     if(tab === 'ram') renderTimestamp(window.__ramLatest || {});
   });
@@ -593,6 +618,56 @@ setInterval(checkForUpdates, UPDATE_CHECK_INTERVAL_MS);
 document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState === 'visible') checkForUpdates();
 });
+
+// ============ 시장동향 탭 ============
+const SECTION_META = {
+  key_topics: { icon: '📌', title: '주요 이슈' },
+  memory: { icon: '🧠', title: '메모리 (DRAM/RDIMM)' },
+  storage: { icon: '💾', title: 'SSD / 낸드플래시' },
+};
+
+function renderNews(latest){
+  const metaEl = document.getElementById('newsMetaArea');
+  const areaEl = document.getElementById('newsArea');
+
+  if(!latest.report_title){
+    metaEl.innerHTML = '';
+    areaEl.innerHTML = '<div class="empty">아직 수집된 시장동향이 없습니다.</div>';
+    return;
+  }
+
+  metaEl.innerHTML = `
+    출처: <a href="${latest.report_url}" target="_blank" rel="noopener">${latest.report_title} ↗</a>
+    · 수집 시각: ${latest.updated_at_display}
+  `;
+
+  const sections = latest.sections || {};
+  const html = Object.keys(SECTION_META).map(key=>{
+    const meta = SECTION_META[key];
+    const bullets = sections[key] || [];
+    if(!bullets.length) return '';
+    return `
+      <div class="news-section">
+        <h3>${meta.icon} ${meta.title}</h3>
+        <ul>${bullets.map(b=>`<li>${b}</li>`).join('')}</ul>
+      </div>
+    `;
+  }).join('');
+
+  areaEl.innerHTML = html || '<div class="empty">추출된 섹션이 없습니다.</div>';
+}
+
+async function loadAndRenderNews(){
+  try{
+    const res = await fetch(`data/market_news/latest.json?t=${Date.now()}`);
+    if(!res.ok) throw new Error('market_news/latest.json을 불러오지 못했습니다.');
+    const latest = await res.json();
+    window.__newsLatest = latest;
+    renderNews(latest);
+  }catch(err){
+    document.getElementById('newsArea').innerHTML = `<div class="error">데이터를 불러오지 못했습니다: ${err.message}</div>`;
+  }
+}
 
 loadAndRenderSSD();
 </script>
