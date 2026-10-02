@@ -61,25 +61,72 @@ def fetch(url: str) -> str:
     return resp.text
 
 
-def find_latest_report_url() -> tuple[str, str] | None:
-    """리소스 목록에서 'Greensheet'가 들어간 가장 최근 글을 찾는다."""
-    html = fetch(RESOURCES_URL)
-    soup = BeautifulSoup(html, "html.parser")
+def to_absolute(href: str) -> str:
+    if href.startswith("/"):
+        return "https://info.fusionww.com" + href
+    return href
 
-    candidates = []
+
+def is_tag_or_category_link(href: str) -> bool:
+    """'/tag/the-greensheet' 같은 분류 페이지는 개별 리포트가 아니므로 제외."""
+    return "/tag/" in href.lower() or "/category/" in href.lower()
+
+
+def looks_like_individual_report(href: str) -> bool:
+    """개별 리포트 링크는 보통 'the-greensheet-2026년-9월'처럼 날짜(숫자)가 슬러그에
+    붙어 있다. 태그 페이지('the-greensheet'만 있고 뒤에 아무것도 안 붙음)와
+    구분하기 위한 조건."""
+    if is_tag_or_category_link(href):
+        return False
+    if "greensheet" not in href.lower():
+        return False
+    return bool(re.search(r"greensheet.+\d", href, re.IGNORECASE))
+
+
+def find_report_links(html: str) -> list[tuple[str, str]]:
+    soup = BeautifulSoup(html, "html.parser")
+    results = []
+    for a in soup.find_all("a", href=True):
+        href = a["href"]
+        if looks_like_individual_report(href):
+            text = a.get_text(" ", strip=True) or href
+            results.append((text, to_absolute(href)))
+    return results
+
+
+def find_latest_report_url() -> tuple[str, str] | None:
+    """1단계: 리소스 목록 페이지에서 'Greensheet' 관련 링크를 찾는다
+       (개별 리포트일 수도, 전용 태그/분류 목록 페이지일 수도 있음).
+    2단계: 찾은 게 태그/분류 페이지면, 그 안에 들어가서 실제 개별 리포트
+       링크를 다시 찾는다. (실제로 이렇게 중첩된 구조였던 게 확인됨:
+       메인 목록 -> "THE GREENSHEET" 태그 페이지 -> 개별 월간 리포트들)
+    """
+    html = fetch(RESOURCES_URL)
+
+    # 메인 목록에 이미 개별 리포트 링크가 바로 있는 경우
+    direct_hits = find_report_links(html)
+    if direct_hits:
+        return direct_hits[0]
+
+    # 없으면 Greensheet 관련 링크(태그 페이지 포함 전부)를 모아서 따라 들어가본다
+    soup = BeautifulSoup(html, "html.parser")
+    related_links = []
     for a in soup.find_all("a", href=True):
         text = a.get_text(" ", strip=True)
-        if "greensheet" in text.lower() or "greensheet" in a["href"].lower():
-            candidates.append((text, a["href"]))
+        href = a["href"]
+        if "greensheet" in text.lower() or "greensheet" in href.lower():
+            related_links.append(to_absolute(href))
 
-    if not candidates:
-        return None
+    for link in related_links:
+        try:
+            sub_html = fetch(link)
+        except requests.exceptions.RequestException:
+            continue
+        hits = find_report_links(sub_html)
+        if hits:
+            return hits[0]
 
-    # 목록은 보통 최신순으로 나열되므로 첫 번째를 채택
-    title, href = candidates[0]
-    if href.startswith("/"):
-        href = "https://info.fusionww.com" + href
-    return title, href
+    return None
 
 
 def find_section_bullets(soup: BeautifulSoup, heading_keywords: list[str]) -> list[str]:
