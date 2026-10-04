@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-10-03T09:19:48.109597+09:00",
-  "updated_at_display": "2026-10-03 09:19",
+  "updated_at": "2026-10-04T14:03:06.547135+09:00",
+  "updated_at_display": "2026-10-04 14:03",
   "items": [
     {
       "site": "다나와",
@@ -21,7 +21,7 @@
       "capacity": "16GB",
       "price_krw": 315008,
       "pcode": "3201268",
-      "matched_text": "2위 16GB 19,688원/1GB",
+      "matched_text": "16GB 19,688원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=3201268"
     },
     {
@@ -32,7 +32,7 @@
       "capacity": "8GB",
       "price_krw": 126800,
       "pcode": "3201319",
-      "matched_text": "8GB 15,850원/1GB",
+      "matched_text": "2위 8GB 15,850원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=3201319"
     },
     {
@@ -109,7 +109,7 @@
       "capacity": "64GB",
       "price_krw": 1571008,
       "pcode": "13433147",
-      "matched_text": "2위 64GB 24,547원/1GB",
+      "matched_text": "64GB 24,547원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=13433147"
     },
     {
@@ -120,7 +120,7 @@
       "capacity": "32GB",
       "price_krw": 636992,
       "pcode": "13432970",
-      "matched_text": "1위 32GB 19,906원/1GB",
+      "matched_text": "2위 32GB 19,906원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=13432970"
     },
     {
@@ -131,7 +131,7 @@
       "capacity": "16GB",
       "price_krw": 300000,
       "pcode": "13432766",
-      "matched_text": "16GB 18,750원/1GB",
+      "matched_text": "1위 16GB 18,750원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=13432766"
     },
     {
