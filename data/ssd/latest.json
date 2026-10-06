@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-10-06T13:05:20.781173+09:00",
-  "updated_at_display": "2026-10-06 13:05",
+  "updated_at": "2026-10-06T14:34:24.181724+09:00",
+  "updated_at_display": "2026-10-06 14:34",
   "items": [
     {
       "site": "다나와",
@@ -70,7 +70,7 @@
       "site": "다나와",
       "source_type": "정품",
       "capacity": "1TB",
-      "price_krw": 407170,
+      "price_krw": 409660,
       "pcode": "13190573",
       "url": "https://prod.danawa.com/info/?pcode=13190573&cate=112760"
     },
