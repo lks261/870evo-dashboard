@@ -3,7 +3,7 @@ name: 870 EVO 가격 수집
 on:
   schedule:
     # 매일 UTC 00:00 = 한국시간(KST) 09:00
-    - cron: "0 0 * * *"
+    - cron: "17 0 * * *"   # 정각(0분) 대신 17분으로 — GitHub Actions는 매시 정각에 몰려서 지연/스킵되기 쉬움
   workflow_dispatch: {}   # 우측 상단 "Run workflow" 버튼으로 수동 실행도 가능
 
 permissions:

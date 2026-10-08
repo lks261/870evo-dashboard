@@ -3,7 +3,7 @@ name: 시장동향 수집 (Greensheet)
 # 월간 리포트이므로 하루 1회가 아니라 매달 1회만 실행한다.
 on:
   schedule:
-    - cron: "0 1 1 * *"   # 매달 1일 UTC 01:00 = 한국시간(KST) 오전 10:00
+    - cron: "41 1 1 * *"   # 매달 1일 UTC 01:41 = 한국시간(KST) 오전 10:41 (정각 회피)
   workflow_dispatch: {}
 
 permissions:
@@ -33,6 +33,7 @@ jobs:
         run: |
           git config user.name "870evo-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/market_news/
+          mkdir -p data/market_news   # 스크래핑이 아예 실패해서 폴더가 안 생겼을 수도 있으니 보장
+          git add data/market_news/ || true
           git diff --staged --quiet && echo "변경 없음, 커밋 생략" || git commit -m "chore: 시장동향(Greensheet) 업데이트 $(date -u +'%Y-%m-%d %H:%M UTC')"
           git push

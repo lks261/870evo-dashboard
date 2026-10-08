@@ -6,7 +6,7 @@ name: 컴퓨존 재시도
 
 on:
   schedule:
-    - cron: "0 3 * * *"   # UTC 03:00 = 한국시간(KST) 낮 12:00 (본 실행 3시간 뒤)
+    - cron: "23 3 * * *"   # UTC 03:23 = 한국시간(KST) 낮 12:23 (정각 회피)
   workflow_dispatch: {}
 
 permissions:
