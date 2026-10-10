@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-10-09T15:05:26.164427+09:00",
-  "updated_at_display": "2026-10-09 15:05",
+  "updated_at": "2026-10-10T14:48:23.637332+09:00",
+  "updated_at_display": "2026-10-10 14:48",
   "items": [
     {
       "site": "다나와",
@@ -38,6 +38,39 @@
     {
       "site": "다나와",
       "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "21300",
+      "capacity": "32GB",
+      "price_krw": 595008,
+      "pcode": "10824564",
+      "matched_text": "2위 32GB 18,594원/1GB",
+      "url": "https://prod.danawa.com/info/?pcode=10824564"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "21300",
+      "capacity": "16GB",
+      "price_krw": 270000,
+      "pcode": "6393108",
+      "matched_text": "1위 16GB 16,875원/1GB",
+      "url": "https://prod.danawa.com/info/?pcode=6393108"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
+      "dimm_type": "RDIMM",
+      "clock": "21300",
+      "capacity": "8GB",
+      "price_krw": 195000,
+      "pcode": "11631620",
+      "matched_text": "8GB 24,375원/1GB",
+      "url": "https://prod.danawa.com/info/?pcode=11631620"
+    },
+    {
+      "site": "다나와",
+      "category": "RAM",
       "dimm_type": "EDIMM",
       "clock": "21300",
       "capacity": "32GB",
@@ -67,39 +100,6 @@
       "pcode": "11631995",
       "matched_text": "2위 8GB 36,250원/1GB",
       "url": "https://prod.danawa.com/info/?pcode=11631995"
-    },
-    {
-      "site": "다나와",
-      "category": "RAM",
-      "dimm_type": "EDIMM",
-      "clock": "23400",
-      "capacity": "32GB",
-      "price_krw": 1056000,
-      "pcode": "15798590",
-      "matched_text": "1위 32GB 33,000원/1GB",
-      "url": "https://prod.danawa.com/info/?pcode=15798590"
-    },
-    {
-      "site": "다나와",
-      "category": "RAM",
-      "dimm_type": "EDIMM",
-      "clock": "23400",
-      "capacity": "16GB",
-      "price_krw": 600000,
-      "pcode": "15798569",
-      "matched_text": "16GB 37,500원/1GB",
-      "url": "https://prod.danawa.com/info/?pcode=15798569"
-    },
-    {
-      "site": "다나와",
-      "category": "RAM",
-      "dimm_type": "EDIMM",
-      "clock": "23400",
-      "capacity": "8GB",
-      "price_krw": 242624,
-      "pcode": "13826867",
-      "matched_text": "2위 8GB 30,328원/1GB",
-      "url": "https://prod.danawa.com/info/?pcode=13826867"
     },
     {
       "site": "다나와",
