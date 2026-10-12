@@ -5,12 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>삼성 부품 가격 대시보드</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.mini.min.js"></script>
 <style>
   :root{
     --teal-900:#123840; --teal-700:#1b6b74; --teal-500:#2aa9b8; --teal-100:#e6f4f5;
     --ink:#26333a; --ink-soft:#5b6b73; --paper:#ffffff; --canvas:#f5f8f9; --line:#e1e8ea;
     --coral:#f2846b; --amber:#e8b84b;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    --sage:#8fbf9f;
+    --sky:#7ab8d9;
+    --radius:14px;
   }
   *{box-sizing:border-box;}
   body{ margin:0; background:var(--canvas); color:var(--ink); padding:28px 20px 60px; }
@@ -95,6 +101,69 @@
   }
   .news-section ul{ margin:0; padding-left:20px; }
   .news-section li{ font-size:13px; line-height:1.7; color:var(--ink); margin-bottom:6px; }
+
+  /* ===== 입출고 탭 (inout-report 병합분, #tabpanel-inout 범위로 격리) ===== */
+  #tabpanel-inout section.block{background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    padding:24px; margin-bottom:22px;}
+  #tabpanel-inout section.block h2{font-size:16px; margin:0 0 4px; color:var(--teal-900);
+    display:flex; align-items:center; gap:8px;}
+  #tabpanel-inout section.block h2 .num{display:inline-flex; align-items:center; justify-content:center;
+    width:22px; height:22px; border-radius:6px; background:var(--teal-500);
+    color:white; font-size:12px; font-weight:700;}
+  #tabpanel-inout section.block > .desc{color:var(--ink-soft); font-size:12.5px; margin:0 0 18px;}
+  #tabpanel-inout .drop{border:1.5px dashed var(--line); border-radius:10px; padding:22px;
+    text-align:center; color:var(--ink-soft); font-size:13px; cursor:pointer;
+    transition: border-color .15s, background .15s;}
+  #tabpanel-inout .drop:hover, #tabpanel-inout .drop.drag{border-color: var(--teal-500); background:var(--teal-100);}
+  #tabpanel-inout .drop input{display:none;}
+  #tabpanel-inout .drop .fname{color:var(--teal-700); font-weight:600;}
+  #tabpanel-inout .mapgrid{display:grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr));
+    gap:12px; margin-top:16px;}
+  #tabpanel-inout .mapfield label{display:block; font-size:11.5px; color:var(--ink-soft); margin-bottom:5px; font-weight:600;}
+  #tabpanel-inout .mapfield select{width:100%; padding:8px 10px; border-radius:8px; border:1px solid var(--line);
+    font-size:13px; background:var(--paper); color:var(--ink);}
+  #tabpanel-inout .mapfield.optional label::after{content:" (선택)"; color:#a9b6bb; font-weight:400;}
+  #tabpanel-inout .levelbox{margin-top:16px; background:var(--teal-100); border-radius:10px; padding:14px 16px;}
+  #tabpanel-inout .levelbox label{display:block; font-size:12px; font-weight:700; color:var(--teal-900); margin-bottom:8px;}
+  #tabpanel-inout .levelbox textarea{width:100%; border:1px solid var(--line); border-radius:8px; padding:9px 10px;
+    font-size:12.5px; font-family:inherit; resize:vertical; color:var(--ink);}
+  #tabpanel-inout .levelbox-hint{font-size:11px; color:var(--ink-soft); margin-top:6px;}
+  #tabpanel-inout .historybox{margin-top:16px; background:#f5f1e8; border:1px solid #e6dcc4; border-radius:10px; padding:14px 16px;}
+  #tabpanel-inout .history-title{font-size:12.5px; font-weight:700; color:#8a6d1f; margin-bottom:10px;}
+  #tabpanel-inout .history-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px;}
+  #tabpanel-inout .history-row input[type=date]{padding:6px 8px; border-radius:6px; border:1px solid var(--line); font-size:12.5px;}
+  #tabpanel-inout .inline-label{font-size:12px; color:var(--ink-soft); font-weight:600;}
+  #tabpanel-inout .history-status{font-size:11.5px; color:var(--ink-soft);}
+  #tabpanel-inout button.small{padding:6px 12px; font-size:11.5px;}
+  #tabpanel-inout .filelike{display:inline-flex; align-items:center; background:var(--teal-100); color:var(--teal-700);
+    border-radius:8px; padding:6px 12px; font-size:11.5px; font-weight:600; cursor:pointer;}
+  #tabpanel-inout .filelike:hover{opacity:.85;}
+  #tabpanel-inout .filelike input{display:none;}
+  #tabpanel-inout .history-hint{font-size:11px; color:#8a6d1f; margin-top:4px; line-height:1.5;}
+  #tabpanel-inout .btnrow{margin-top:18px; display:flex; gap:10px; flex-wrap:wrap;}
+  #tabpanel-inout button{border:none; border-radius:8px; padding:9px 16px; font-size:13px; font-weight:600;
+    cursor:pointer; transition: transform .1s, opacity .1s;}
+  #tabpanel-inout button.primary{background:var(--teal-700); color:white;}
+  #tabpanel-inout button.primary:hover{opacity:.9;}
+  #tabpanel-inout button.ghost{background:var(--teal-100); color:var(--teal-700);}
+  #tabpanel-inout button.ghost:hover{opacity:.85;}
+  #tabpanel-inout button:disabled{background:#dfe5e7; color:#9aa7ac; cursor:not-allowed;}
+  #tabpanel-inout button:active:not(:disabled){transform: scale(.98);}
+  #tabpanel-inout .charts{display:grid; grid-template-columns: 1.15fr 0.85fr; gap:18px; margin-top:22px;}
+  #tabpanel-inout .chart-card{border:1px solid var(--line); border-radius:10px; padding:16px; background:var(--paper);
+    position:relative;}
+  #tabpanel-inout .chart-card h3{font-size:12.5px; margin:0 0 10px; color:var(--ink-soft); font-weight:700;}
+  #tabpanel-inout .chart-card canvas{max-height:310px;}
+  #tabpanel-inout .chart-card .save-btn{position:absolute; top:12px; right:12px; font-size:11px; padding:5px 10px;}
+  #tabpanel-inout .full{grid-column: 1 / -1;}
+  #tabpanel-inout table.datatable{width:100%; border-collapse:collapse; margin-top:18px; font-size:12.5px;}
+  #tabpanel-inout table.datatable th, #tabpanel-inout table.datatable td{border:1px solid var(--line); padding:7px 10px; text-align:center;}
+  #tabpanel-inout table.datatable th{background:var(--teal-100); color:var(--teal-900);}
+  #tabpanel-inout table.datatable td.num{font-variant-numeric: tabular-nums;}
+  #tabpanel-inout .hint{font-size:11.5px; color:var(--ink-soft); background:var(--teal-100);
+    border-radius:8px; padding:10px 12px; margin-top:14px; line-height:1.5;}
+  #tabpanel-inout .empty-note{color:#a9b6bb; font-size:13px; padding:24px; text-align:center;}
+  #tabpanel-inout .inout-intro{ font-size:12.5px; color:var(--ink-soft); margin:0 0 16px; }
 </style>
 </head>
 <body>
@@ -113,6 +182,7 @@
     <button class="tabbtn active" data-tab="ssd">SSD</button>
     <button class="tabbtn" data-tab="ram">서버 RAM</button>
     <button class="tabbtn" data-tab="news">시장동향</button>
+    <button class="tabbtn" data-tab="inout">입출고</button>
   </div>
 
   <!-- ===================== SSD 탭 ===================== -->
@@ -161,6 +231,110 @@
       </div>
       <canvas id="ramTrendChart"></canvas>
     </div>
+  </div>
+
+  <!-- ===================== 입출고 탭 ===================== -->
+  <div class="tabpanel" id="tabpanel-inout">
+    <p class="inout-intro">재고관리 프로그램에서 뽑은 원본 CSV/엑셀을 올리면 분기 보고서용 표·그래프를 만들어줍니다. 파일은 서버로 업로드되지 않고 이 브라우저 안에서만 처리됩니다.</p>
+<!-- ===================== 서버 블록 ===================== -->
+  <section class="block">
+    <h2><span class="num">1</span>서버 입출고</h2>
+    <p class="desc">컬럼: 제품명 / 입고수량 / 출고수량 (규격, LEVEL은 있으면 활용, 없어도 동작)</p>
+
+    <div class="drop" id="serverDrop">
+      <div>CSV 또는 엑셀(xlsx) 파일을 여기로 끌어놓거나 클릭해서 선택하세요</div>
+      <div class="fname" id="serverFname"></div>
+      <input type="file" id="serverFile" accept=".csv,.xlsx,.xls" />
+    </div>
+
+    <div class="mapgrid" id="serverMap" style="display:none;"></div>
+
+    <div class="levelbox" id="serverLevelBox" style="display:none;">
+      <label>Entry로 분류할 모델명 (쉼표로 구분 — 여기 없는 모델은 전부 High-End로 분류됩니다)</label>
+      <textarea id="entryModelList" rows="2"></textarea>
+      <div class="levelbox-hint">CSV에 LEVEL 컬럼을 직접 지정하면 이 목록 대신 그 값을 우선 사용합니다.</div>
+    </div>
+
+    <div class="btnrow">
+      <button class="primary" id="serverGenerate" disabled>표·그래프 생성</button>
+      <button class="ghost" id="serverReset" style="display:none;">초기화</button>
+    </div>
+
+    <div class="historybox" id="serverHistoryBox" style="display:none;">
+      <div class="history-title">📦 누적 히스토리 &amp; 기간별 조회</div>
+      <div class="history-row">
+        <button class="ghost small" id="serverAddHistory">현재 업로드분 히스토리에 추가</button>
+        <span class="history-status" id="serverHistoryStatus">히스토리 0건</span>
+      </div>
+      <div class="history-row">
+        <label class="inline-label">기간</label>
+        <input type="date" id="serverDateFrom">
+        <span>~</span>
+        <input type="date" id="serverDateTo">
+        <button class="ghost small" id="serverApplyFilter">필터 적용</button>
+        <button class="ghost small" id="serverClearFilter">전체보기</button>
+      </div>
+      <div class="history-row">
+        <button class="ghost small" id="serverExportHistory">히스토리 JSON 저장</button>
+        <label class="filelike">히스토리 불러오기
+          <input type="file" id="serverImportHistory" accept=".json" />
+        </label>
+      </div>
+      <div class="history-hint">각 행에 날짜 컬럼이 없으면 "히스토리에 추가"한 날(오늘)로 기록됩니다. 다음 분기에도 이 파일(히스토리 JSON)을 불러온 뒤 새 데이터를 추가하면 계속 누적됩니다.</div>
+    </div>
+
+    <div id="serverOutput"></div>
+  </section>
+
+  <!-- ===================== 보안장비 블록 ===================== -->
+  <section class="block">
+    <h2><span class="num">2</span>보안장비 출고</h2>
+    <p class="desc">컬럼: 모델명 / 수량 (날짜, 업체명은 있으면 활용, 없어도 동작)</p>
+
+    <div class="drop" id="secDrop">
+      <div>CSV 또는 엑셀(xlsx) 파일을 여기로 끌어놓거나 클릭해서 선택하세요</div>
+      <div class="fname" id="secFname"></div>
+      <input type="file" id="secFile" accept=".csv,.xlsx,.xls" />
+    </div>
+
+    <div class="mapgrid" id="secMap" style="display:none;"></div>
+
+    <div class="btnrow">
+      <button class="primary" id="secGenerate" disabled>표·그래프 생성</button>
+      <button class="ghost" id="secReset" style="display:none;">초기화</button>
+    </div>
+
+    <div class="historybox" id="secHistoryBox" style="display:none;">
+      <div class="history-title">📦 누적 히스토리 &amp; 기간별 조회</div>
+      <div class="history-row">
+        <button class="ghost small" id="secAddHistory">현재 업로드분 히스토리에 추가</button>
+        <span class="history-status" id="secHistoryStatus">히스토리 0건</span>
+      </div>
+      <div class="history-row">
+        <label class="inline-label">기간</label>
+        <input type="date" id="secDateFrom">
+        <span>~</span>
+        <input type="date" id="secDateTo">
+        <button class="ghost small" id="secApplyFilter">필터 적용</button>
+        <button class="ghost small" id="secClearFilter">전체보기</button>
+      </div>
+      <div class="history-row">
+        <button class="ghost small" id="secExportHistory">히스토리 JSON 저장</button>
+        <label class="filelike">히스토리 불러오기
+          <input type="file" id="secImportHistory" accept=".json" />
+        </label>
+      </div>
+      <div class="history-hint">각 행에 날짜 컬럼이 없으면 "히스토리에 추가"한 날(오늘)로 기록됩니다. 다음 분기에도 이 파일(히스토리 JSON)을 불러온 뒤 새 데이터를 추가하면 계속 누적됩니다.</div>
+    </div>
+
+    <div id="secOutput"></div>
+  </section>
+
+  <div class="hint">
+    💡 각 그래프 우측 상단의 "PNG 저장" 버튼을 누르면 이미지 파일로 바로 다운로드됩니다. PPT에 끌어다 놓기만 하면 돼요.<br>
+    💡 컬럼 이름이 CSV마다 달라도 괜찮습니다 — 업로드 후 드롭다운에서 어떤 컬럼이 무엇인지 직접 지정하면 됩니다.<br>
+    💡 <strong>데이터를 계속 쌓아가려면</strong>: ① 표·그래프 생성 → ② "히스토리에 추가" → ③ "히스토리 JSON 저장"으로 파일 보관. 다음에 작업할 땐 그 JSON을 "히스토리 불러오기"로 연 다음 새 데이터를 다시 추가하면 계속 누적됩니다. 이 도구는 서버에 아무것도 저장하지 않으므로, 히스토리 JSON 파일을 직접 보관하셔야 합니다.
+  </div>
   </div>
 
   <!-- ===================== 시장동향 탭 ===================== -->
@@ -238,6 +412,7 @@ const TAB_META = {
   ssd: { title: '삼성 870 EVO 가격 대시보드', desc: '' },
   ram: { title: '삼성전자 서버용 DDR4 RAM 가격 대시보드', desc: '' },
   news: { title: '시장동향', desc: '' },
+  inout: { title: '입출고 현황 리포트', desc: '' },
 };
 let ramLoaded = false;
 let newsLoaded = false;
@@ -251,6 +426,8 @@ document.querySelectorAll('.tabbtn').forEach(btn=>{
     document.getElementById('pageDesc').textContent = TAB_META[tab].desc;
     if(tab === 'ram' && !ramLoaded){ ramLoaded = true; loadAndRenderRAM(); }
     if(tab === 'news' && !newsLoaded){ newsLoaded = true; loadAndRenderNews(); }
+    if(tab === 'news') renderTimestamp(window.__newsLatest || {});
+    if(tab === 'inout') document.getElementById('tsBox').textContent = '';
     if(tab === 'ssd') renderTimestamp(window.__ssdLatest || {});
     if(tab === 'ram') renderTimestamp(window.__ramLatest || {});
   });
@@ -664,12 +841,753 @@ async function loadAndRenderNews(){
     const latest = await res.json();
     window.__newsLatest = latest;
     renderNews(latest);
+    if(document.getElementById('tabpanel-news').classList.contains('active')) renderTimestamp(latest);
   }catch(err){
     document.getElementById('newsArea').innerHTML = `<div class="error">데이터를 불러오지 못했습니다: ${err.message}</div>`;
   }
 }
 
 loadAndRenderSSD();
+</script>
+
+<script>
+// ============ 입출고 탭 (inout-report 병합분) ============
+
+const PALETTE = ['#f28c6b','#f2c14e','#7fd1c9','#7ab8d9','#a893c9','#8fbf9f','#e88fa8','#c9b98f'];
+
+// 기존 엑셀 IF수식(=IF(OR(B5="DELL R230", ...), "Entry", "High-End")) 기준값
+const DEFAULT_ENTRY_MODELS = [
+  'DELL R230','Lenovo RS140','Intel SR1302 V2','DELL R240','DELL R250',
+  'HP DL320e Gen8 V2','Intel SR1630','Fujitsu RX100S8','HP DL20 Gen10'
+];
+
+function classifyLevel(name, entrySet){
+  return entrySet.has(name.trim()) ? 'Entry' : 'High-End';
+}
+
+// ---------- 공통 유틸 ----------
+function parseCSVText(file, cb){
+  Papa.parse(file, {
+    header:true, skipEmptyLines:true,
+    complete: (res)=> cb(res.data, res.meta.fields),
+    encoding: "UTF-8"
+  });
+}
+
+function sheetRowsToObjects(rows){
+  // rows: array-of-arrays. "[ 기간별입출고현황 ]" 같은 제목 행(셀 1개만 채워짐)은
+  // 헤더가 아니므로, 채워진 셀이 2개 이상인 첫 행을 헤더로 인식한다.
+  const isFilled = c => c !== undefined && c !== null && String(c).trim() !== '';
+  const headerRow = rows.find(r => r.filter(isFilled).length >= 2);
+  if(!headerRow) return {data:[], fields:[]};
+  const startIdx = rows.indexOf(headerRow);
+  const fields = headerRow.map((h,i)=> isFilled(h) ? String(h).trim() : `열${i+1}`);
+  const data = [];
+  for(let i=startIdx+1; i<rows.length; i++){
+    const r = rows[i];
+    if(!r || !r.some(isFilled)) continue;
+    const obj = {};
+    fields.forEach((f,idx)=> obj[f] = isFilled(r[idx]) ? r[idx] : '');
+    data.push(obj);
+  }
+  return {data, fields};
+}
+
+function parseXLSX(file, cb){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    const wb = XLSX.read(e.target.result, {type:'array'});
+    const sheetName = wb.SheetNames[0];
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {header:1, raw:true, defval:''});
+    const {data, fields} = sheetRowsToObjects(rows);
+    cb(data, fields);
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseFile(file, cb){
+  const ext = file.name.split('.').pop().toLowerCase();
+  if(ext === 'xlsx' || ext === 'xls'){
+    parseXLSX(file, cb);
+  } else {
+    parseCSVText(file, cb);
+  }
+}
+
+function buildMapUI(container, fields, spec){
+  container.innerHTML = '';
+  container.style.display = 'grid';
+  const selects = {};
+  spec.forEach(f=>{
+    const div = document.createElement('div');
+    div.className = 'mapfield' + (f.optional ? ' optional' : '');
+    const label = document.createElement('label');
+    label.textContent = f.label;
+    const sel = document.createElement('select');
+    const noneOpt = document.createElement('option');
+    noneOpt.value=''; noneOpt.textContent = f.optional ? '(사용 안 함)' : '선택하세요';
+    sel.appendChild(noneOpt);
+    fields.forEach(col=>{
+      const opt = document.createElement('option');
+      opt.value = col; opt.textContent = col;
+      if(col === f.guess) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    div.appendChild(label); div.appendChild(sel);
+    container.appendChild(div);
+    selects[f.key] = sel;
+  });
+  return selects;
+}
+
+function guessColumn(fields, candidates){
+  for(const c of candidates){
+    const hit = fields.find(f => f.replace(/\s/g,'') === c);
+    if(hit) return hit;
+  }
+  for(const c of candidates){
+    const hit = fields.find(f => f.replace(/\s/g,'').includes(c));
+    if(hit) return hit;
+  }
+  return null;
+}
+
+function toNum(v){
+  if(v===undefined||v===null||v==='') return 0;
+  const n = parseFloat(String(v).replace(/,/g,''));
+  return isNaN(n) ? 0 : n;
+}
+
+// 엑셀 날짜 시리얼값 / 다양한 문자열 표기를 YYYY-MM-DD로 통일
+function normalizeDate(v){
+  if(v===undefined || v===null || v==='') return null;
+  if(v instanceof Date && !isNaN(v)) return v.toISOString().slice(0,10);
+  if(typeof v === 'number'){
+    try{
+      const d = XLSX.SSF.parse_date_code(v);
+      if(d) return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+    }catch(e){}
+    return null;
+  }
+  const s = String(v).trim();
+  const m = s.match(/^(\d{4})[-.\/](\d{1,2})[-.\/](\d{1,2})/);
+  if(m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  return null;
+}
+
+// 파이차트 외부라벨이 캔버스 밖으로 잘리지 않도록, 가장 긴 라벨 텍스트 폭을 미리 측정해서
+// 좌우 여백(padding)을 동적으로 계산한다.
+function computePiePadding(names, values){
+  const total = values.reduce((a,b)=>a+b,0) || 1;
+  const tmp = document.createElement('canvas').getContext('2d');
+  tmp.font = '10.5px -apple-system, sans-serif';
+  let maxW = 40;
+  names.forEach((n,i)=>{
+    const pct = values[i]/total*100;
+    if(pct < 1) return;
+    const w = tmp.measureText(`${n}, ${pct.toFixed(0)}%`).width;
+    if(w > maxW) maxW = w;
+  });
+  return Math.min(180, maxW + 34); // 연결선 길이(약 34px) + 텍스트 폭, 과도하게 커지지 않게 상한
+}
+
+// x축 카테고리를 레벨(Entry/High-End)별로 묶어서 라벨을 그려주는 커스텀 플러그인
+const groupLabelsPlugin = {
+  id: 'groupLabels',
+  afterDraw(chart, args, opts){
+    const groups = opts.groups;
+    if(!groups || !groups.length) return;
+    const {ctx} = chart;
+    const xScale = chart.scales.x;
+    ctx.save();
+    ctx.font = '11px -apple-system, sans-serif';
+    ctx.fillStyle = '#5b6b73';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    // xScale.bottom = 회전된 눈금 라벨까지 포함한 실제 축 하단 경계 (겹침 방지 핵심)
+    const lineY = xScale.bottom + 10;
+    const textY = xScale.bottom + 22;
+    groups.forEach(g=>{
+      const xStart = xScale.getPixelForTick(g.start);
+      const xEnd = xScale.getPixelForTick(g.end);
+      const xMid = (xStart + xEnd) / 2;
+      ctx.strokeStyle = '#c9d3d6';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(xStart - 12, lineY);
+      ctx.lineTo(xEnd + 12, lineY);
+      ctx.stroke();
+      ctx.fillText(g.label, xMid, textY);
+    });
+    ctx.restore();
+  }
+};
+
+function computeLevelGroups(names, agg){
+  const groups = [];
+  let start = 0;
+  for(let i=1; i<=names.length; i++){
+    if(i===names.length || agg[names[i]].level !== agg[names[start]].level){
+      groups.push({ label: agg[names[start]].level, start, end: i-1 });
+      start = i;
+    }
+  }
+  return groups;
+}
+
+Chart.register(ChartDataLabels, groupLabelsPlugin);
+Chart.defaults.set('plugins.datalabels', { display:false }); // 기본은 꺼두고 차트별로 개별 활성화
+
+// 파이차트 조각 바깥에 "이름, 퍼센트" + 연결선을 그리는 플러그인 (PPT식 outside-end 라벨)
+const pieOutsideLabelsPlugin = {
+  id: 'pieOutsideLabels',
+  afterDatasetsDraw(chart, args, opts){
+    if(!opts) return; // 옵션을 명시한 차트에서만 동작
+    const meta = chart.getDatasetMeta(0);
+    if(!meta || !meta.data.length || meta.data[0].startAngle === undefined) return;
+    const dataset = chart.data.datasets[0];
+    const labels = chart.data.labels;
+    const total = dataset.data.reduce((a,b)=>a+b,0) || 1;
+    const minPercent = opts.minPercent || 1;
+    const { ctx } = chart;
+    ctx.save();
+    ctx.font = '10.5px -apple-system, sans-serif';
+    ctx.fillStyle = '#33414d';
+    meta.data.forEach((arc, i)=>{
+      const value = dataset.data[i];
+      if(!value) return;
+      const pct = value / total * 100;
+      if(pct < minPercent) return;
+      const angle = (arc.startAngle + arc.endAngle) / 2;
+      const cos = Math.cos(angle), sin = Math.sin(angle);
+      const outerR = arc.outerRadius;
+      const p1 = { x: arc.x + cos*outerR,       y: arc.y + sin*outerR };
+      const p2 = { x: arc.x + cos*(outerR+12),  y: arc.y + sin*(outerR+12) };
+      const isRight = cos >= 0;
+      let p3x = p2.x + (isRight?16:-16);
+      let p3y = p2.y;
+
+      const text = `${labels[i]}, ${pct.toFixed(0)}%`;
+      const textW = ctx.measureText(text).width;
+      const margin = 4;
+      // 캔버스 좌우 경계를 벗어나면 안쪽으로 밀어넣기 (잘림 방지 안전망)
+      if(isRight && p3x + margin + textW > chart.width - margin){
+        p3x = chart.width - margin - textW - margin;
+      } else if(!isRight && p3x - margin - textW < margin){
+        p3x = margin + textW + margin;
+      }
+      // 상하 경계 클램핑
+      p3y = Math.max(8, Math.min(chart.height - 8, p3y));
+
+      ctx.strokeStyle = '#b7c2c6';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p3y);
+      ctx.lineTo(p3x, p3y);
+      ctx.stroke();
+
+      ctx.textAlign = isRight ? 'left' : 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, p3x + (isRight?4:-4), p3y);
+    });
+    ctx.restore();
+  }
+};
+Chart.register(pieOutsideLabelsPlugin);
+
+function savePNG(canvas, filename){
+  const link = document.createElement('a');
+  link.download = filename;
+  link.href = canvas.toDataURL('image/png', 1.0);
+  link.click();
+}
+
+// ================= 서버 =================
+let serverData = null, serverFields = null, serverCharts = [];
+let serverHistory = [];      // 누적 히스토리 (행 단위: {product,inQty,outQty,level,date})
+let serverEntrySet = null;   // 마지막으로 사용한 Entry 목록
+
+document.getElementById('serverDrop').addEventListener('click', ()=> document.getElementById('serverFile').click());
+document.getElementById('serverFile').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  document.getElementById('serverFname').textContent = '선택됨: ' + file.name;
+  parseFile(file, (data, fields)=>{
+    serverData = data; serverFields = fields;
+    const spec = [
+      {key:'product', label:'제품명', guess: guessColumn(fields, ['제품명','모델명','품명'])},
+      {key:'inQty',   label:'입고수량(재입고)', guess: guessColumn(fields, ['입고수량','입고'])},
+      {key:'outQty',  label:'출고수량', guess: guessColumn(fields, ['출고수량','출고'])},
+      {key:'level',   label:'LEVEL(Entry/High-End)', guess: guessColumn(fields, ['LEVEL','레벨']), optional:true},
+      {key:'date',    label:'날짜', guess: guessColumn(fields, ['날짜','일자','등록일']), optional:true},
+    ];
+    window.serverSel = buildMapUI(document.getElementById('serverMap'), fields, spec);
+    document.getElementById('serverGenerate').disabled = false;
+    document.getElementById('serverLevelBox').style.display = 'block';
+    if(!document.getElementById('entryModelList').value.trim()){
+      document.getElementById('entryModelList').value = DEFAULT_ENTRY_MODELS.join(', ');
+    }
+  });
+});
+
+// 원본 rows(제품명/입고/출고/LEVEL/날짜)를 집계해서 차트에 필요한 형태로 변환
+function aggregateServerRows(rows, entrySet){
+  const agg = {};
+  rows.forEach(r=>{
+    if(!r.product) return;
+    if(!agg[r.product]) agg[r.product] = {in:0, out:0, level:''};
+    agg[r.product].in += r.inQty;
+    agg[r.product].out += r.outQty;
+    if(r.level) agg[r.product].level = r.level;
+  });
+  Object.keys(agg).forEach(name=>{
+    if(!agg[name].level) agg[name].level = classifyLevel(name, entrySet);
+  });
+  let names = Object.keys(agg);
+  names.sort((a,b)=>{
+    const la = agg[a].level || '', lb = agg[b].level || '';
+    if(la !== lb) return la.localeCompare(lb);
+    return b.localeCompare(a) < 0 ? 1 : -1;
+  });
+  const outArr = names.map(n=>agg[n].out);
+  const inArr = names.map(n=>agg[n].in);
+  const netArr = names.map(n=>agg[n].out - agg[n].in);
+  const totalOut = outArr.reduce((a,b)=>a+b,0) || 1;
+  const ratioArr = names.map(n=> agg[n].out / totalOut);
+  return {agg, names, outArr, inArr, netArr, ratioArr};
+}
+
+function renderServerFromRows(rows, entrySet, sourceLabel){
+  const {agg, names, outArr, inArr, netArr, ratioArr} = aggregateServerRows(rows, entrySet);
+  if(names.length === 0){
+    document.getElementById('serverOutput').innerHTML = '<div class="empty-note">표시할 데이터가 없습니다.</div>';
+    return;
+  }
+  renderServerOutput(names, agg, outArr, inArr, netArr, ratioArr);
+  document.getElementById('serverReset').style.display = 'inline-block';
+  updateServerHistoryStatus(sourceLabel);
+}
+
+document.getElementById('serverGenerate').addEventListener('click', ()=>{
+  const sel = window.serverSel;
+  const pCol = sel.product.value, inCol = sel.inQty.value, outCol = sel.outQty.value;
+  const lvCol = sel.level.value, dateCol = sel.date.value;
+  if(!pCol || !inCol || !outCol){ alert('제품명 / 입고수량 / 출고수량 컬럼은 반드시 지정해야 합니다.'); return; }
+
+  serverEntrySet = new Set(
+    document.getElementById('entryModelList').value
+      .split(',').map(s=>s.trim()).filter(Boolean)
+  );
+
+  const rows = serverData.map(row=>({
+    product: (row[pCol]||'').trim(),
+    inQty: toNum(row[inCol]),
+    outQty: toNum(row[outCol]),
+    level: lvCol ? (row[lvCol]||'').toString().trim() : '',
+    date: dateCol ? normalizeDate(row[dateCol]) : null,
+  })).filter(r=>r.product);
+
+  window.serverCurrentRows = rows;
+  document.getElementById('serverHistoryBox').style.display = 'block';
+  renderServerFromRows(rows, serverEntrySet, `현재 업로드 파일 (${rows.length}건)`);
+});
+
+function updateServerHistoryStatus(sourceLabel){
+  const el = document.getElementById('serverHistoryStatus');
+  if(el) el.textContent = `${sourceLabel} · 히스토리 총 ${serverHistory.length}건 보관 중`;
+}
+
+document.getElementById('serverAddHistory').addEventListener('click', ()=>{
+  if(!window.serverCurrentRows || !window.serverCurrentRows.length){
+    alert('먼저 표·그래프를 생성한 뒤 추가해주세요.'); return;
+  }
+  const today = new Date().toISOString().slice(0,10);
+  const tagged = window.serverCurrentRows.map(r=> ({...r, date: r.date || today}));
+  serverHistory = serverHistory.concat(tagged);
+  updateServerHistoryStatus(`히스토리에 ${tagged.length}건 추가됨`);
+  alert(`히스토리에 ${tagged.length}건을 추가했습니다. (날짜 미지정 행은 오늘 날짜로 기록) 현재 총 ${serverHistory.length}건`);
+});
+
+document.getElementById('serverApplyFilter').addEventListener('click', ()=>{
+  if(!serverHistory.length){ alert('히스토리가 비어 있습니다. 먼저 "히스토리에 추가"를 눌러주세요.'); return; }
+  const from = document.getElementById('serverDateFrom').value;
+  const to = document.getElementById('serverDateTo').value;
+  const dated = serverHistory.filter(r=>r.date);
+  const noDate = serverHistory.length - dated.length;
+  const filtered = dated.filter(r => (!from || r.date>=from) && (!to || r.date<=to));
+  const label = `기간 필터 결과 (${from||'전체'} ~ ${to||'전체'}, ${filtered.length}건${noDate?`, 날짜없음 ${noDate}건 제외`:''})`;
+  renderServerFromRows(filtered, serverEntrySet, label);
+});
+
+document.getElementById('serverClearFilter').addEventListener('click', ()=>{
+  document.getElementById('serverDateFrom').value = '';
+  document.getElementById('serverDateTo').value = '';
+  if(serverHistory.length){
+    renderServerFromRows(serverHistory, serverEntrySet, `히스토리 전체 (${serverHistory.length}건)`);
+  } else if(window.serverCurrentRows){
+    renderServerFromRows(window.serverCurrentRows, serverEntrySet, `현재 업로드 파일 (${window.serverCurrentRows.length}건)`);
+  }
+});
+
+document.getElementById('serverExportHistory').addEventListener('click', ()=>{
+  if(!serverHistory.length){ alert('저장할 히스토리가 없습니다.'); return; }
+  const blob = new Blob([JSON.stringify(serverHistory, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `server_history_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('serverImportHistory').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    try{
+      const parsed = JSON.parse(ev.target.result);
+      if(!Array.isArray(parsed)) throw new Error('배열 형식이 아님');
+      serverHistory = parsed;
+      updateServerHistoryStatus(`히스토리 파일 불러옴`);
+      alert(`히스토리 ${serverHistory.length}건을 불러왔습니다. (기존 화면의 히스토리는 이 파일 내용으로 대체됩니다)`);
+    }catch(err){
+      alert('히스토리 파일을 읽을 수 없습니다. 이 도구에서 내보낸 JSON 파일인지 확인해주세요.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+document.getElementById('serverReset').addEventListener('click', ()=>{
+  document.getElementById('serverOutput').innerHTML='';
+  document.getElementById('serverMap').style.display='none';
+  document.getElementById('serverMap').innerHTML='';
+  document.getElementById('serverLevelBox').style.display='none';
+  document.getElementById('serverFname').textContent='';
+  document.getElementById('serverFile').value='';
+  document.getElementById('serverGenerate').disabled = true;
+  document.getElementById('serverReset').style.display='none';
+  serverCharts.forEach(c=>c.destroy()); serverCharts=[];
+});
+
+function renderServerOutput(names, agg, outArr, inArr, netArr, ratioArr){
+  serverCharts.forEach(c=>c.destroy()); serverCharts=[];
+  const el = document.getElementById('serverOutput');
+  el.innerHTML = `
+    <div class="charts">
+      <div class="chart-card full">
+        <h3>입출고 수량</h3>
+        <button class="ghost save-btn" data-c="s1">PNG 저장</button>
+        <canvas id="serverChart1"></canvas>
+      </div>
+      <div class="chart-card full">
+        <h3>출고 비율</h3>
+        <button class="ghost save-btn" data-c="s2">PNG 저장</button>
+        <canvas id="serverChart2"></canvas>
+      </div>
+      <div class="chart-card full">
+        <h3>순출고량 (출고 - 재입고)</h3>
+        <button class="ghost save-btn" data-c="s3">PNG 저장</button>
+        <canvas id="serverChart3" height="90"></canvas>
+      </div>
+    </div>
+    <table class="datatable">
+      <thead><tr><th>제품명</th><th>LEVEL</th><th>출고</th><th>재입고</th><th>순출고량</th><th>출고비율</th></tr></thead>
+      <tbody>
+        ${names.map((n,i)=>`<tr><td>${n}</td><td>${agg[n].level}</td><td class="num">${outArr[i]}</td><td class="num">${inArr[i]}</td><td class="num">${netArr[i]}</td><td class="num">${(ratioArr[i]*100).toFixed(1)}%</td></tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+
+  const levelGroups = computeLevelGroups(names, agg);
+
+  const c1 = new Chart(document.getElementById('serverChart1'), {
+    type:'bar',
+    data:{ labels:names, datasets:[
+      {label:'출고', data:outArr, backgroundColor:'#f2846b'},
+      {label:'재입고', data:inArr, backgroundColor:'#e8c15a'},
+    ]},
+    options:{
+      responsive:true,
+      layout:{ padding:{ top: 20, bottom: 40 } },
+      plugins:{
+        legend:{ position:'top', align:'end', labels:{boxWidth:12,font:{size:11}} },
+        datalabels:{
+          display:true, anchor:'end', align:'end', offset:2,
+          font:{size:10}, color:'#33414d',
+          formatter:(v)=> v === 0 ? '' : v
+        },
+        groupLabels:{ groups: levelGroups, offset: 30 }
+      },
+      scales:{ x:{ ticks:{ font:{size:10} } }, y:{ beginAtZero:true, grace:'10%' } }
+    }
+  });
+  const piePad = computePiePadding(names, outArr);
+  const c2 = new Chart(document.getElementById('serverChart2'), {
+    type:'pie',
+    data:{ labels:names, datasets:[{ data: outArr, backgroundColor: names.map((_,i)=>PALETTE[i%PALETTE.length]) }]},
+    options:{
+      responsive:true,
+      layout:{ padding:{ left:piePad, right:piePad, top:26, bottom:26 } },
+      plugins:{
+        legend:{ display:false },
+        datalabels:{ display:false },
+        pieOutsideLabels:{ minPercent: 1 }
+      }
+    }
+  });
+  const c3 = new Chart(document.getElementById('serverChart3'), {
+    type:'bar',
+    data:{ labels:names, datasets:[{ label:'순출고량', data:netArr,
+      backgroundColor: netArr.map(v=> v<0 ? '#7ab8d9' : '#f2846b') }]},
+    options:{
+      responsive:true,
+      layout:{ padding:{ top:20, bottom:6 } },
+      plugins:{
+        legend:{ display:false },
+        datalabels:{
+          display:true, anchor:'end',
+          align: (ctx)=> ctx.dataset.data[ctx.dataIndex] < 0 ? 'start' : 'end',
+          font:{size:10}, color:'#33414d',
+          formatter:(v)=> v === 0 ? '' : v
+        }
+      },
+      scales:{ y:{ grace:'15%' } }
+    }
+  });
+  serverCharts = [c1,c2,c3];
+
+  el.querySelectorAll('.save-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const map = {s1:'serverChart1', s2:'serverChart2', s3:'serverChart3'};
+      savePNG(document.getElementById(map[btn.dataset.c]), map[btn.dataset.c]+'.png');
+    });
+  });
+}
+
+// ================= 보안장비 =================
+let secData = null, secFields = null, secCharts = [];
+let secHistory = [];
+
+document.getElementById('secDrop').addEventListener('click', ()=> document.getElementById('secFile').click());
+document.getElementById('secFile').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  document.getElementById('secFname').textContent = '선택됨: ' + file.name;
+  parseFile(file, (data, fields)=>{
+    secData = data; secFields = fields;
+    const spec = [
+      {key:'product', label:'모델명', guess: guessColumn(fields, ['모델명','제품명'])},
+      {key:'qty',     label:'수량', guess: guessColumn(fields, ['수량'])},
+      {key:'date',    label:'날짜', guess: guessColumn(fields, ['날짜','일자']), optional:true},
+      {key:'vendor',  label:'업체명', guess: guessColumn(fields, ['업체명','거래처']), optional:true},
+    ];
+    window.secSel = buildMapUI(document.getElementById('secMap'), fields, spec);
+    document.getElementById('secGenerate').disabled = false;
+  });
+});
+
+function aggregateSecRows(rows){
+  const agg = {};
+  rows.forEach(r=>{
+    if(!r.product) return;
+    agg[r.product] = (agg[r.product] || 0) + (r.qty || 1);
+  });
+  const names = Object.keys(agg).sort((a,b)=> agg[b]-agg[a]);
+  const qtyArr = names.map(n=>agg[n]);
+  const total = qtyArr.reduce((a,b)=>a+b,0) || 1;
+  return {names, qtyArr, total};
+}
+
+function renderSecFromRows(rows, sourceLabel){
+  const {names, qtyArr, total} = aggregateSecRows(rows);
+  if(names.length === 0){
+    document.getElementById('secOutput').innerHTML = '<div class="empty-note">표시할 데이터가 없습니다.</div>';
+    return;
+  }
+  renderSecOutput(names, qtyArr, total);
+  document.getElementById('secReset').style.display = 'inline-block';
+  updateSecHistoryStatus(sourceLabel);
+}
+
+document.getElementById('secGenerate').addEventListener('click', ()=>{
+  const sel = window.secSel;
+  const pCol = sel.product.value, qCol = sel.qty.value, dateCol = sel.date.value;
+  if(!pCol || !qCol){ alert('모델명 / 수량 컬럼은 반드시 지정해야 합니다.'); return; }
+
+  const rows = secData.map(row=>({
+    product: (row[pCol]||'').trim(),
+    qty: row[qCol]===undefined||row[qCol]==='' ? 1 : (toNum(row[qCol]) || 1),
+    date: dateCol ? normalizeDate(row[dateCol]) : null,
+  })).filter(r=>r.product);
+
+  window.secCurrentRows = rows;
+  document.getElementById('secHistoryBox').style.display = 'block';
+  renderSecFromRows(rows, `현재 업로드 파일 (${rows.length}건)`);
+});
+
+function updateSecHistoryStatus(sourceLabel){
+  const el = document.getElementById('secHistoryStatus');
+  if(el) el.textContent = `${sourceLabel} · 히스토리 총 ${secHistory.length}건 보관 중`;
+}
+
+document.getElementById('secAddHistory').addEventListener('click', ()=>{
+  if(!window.secCurrentRows || !window.secCurrentRows.length){
+    alert('먼저 표·그래프를 생성한 뒤 추가해주세요.'); return;
+  }
+  const today = new Date().toISOString().slice(0,10);
+  const tagged = window.secCurrentRows.map(r=> ({...r, date: r.date || today}));
+  secHistory = secHistory.concat(tagged);
+  updateSecHistoryStatus(`히스토리에 ${tagged.length}건 추가됨`);
+  alert(`히스토리에 ${tagged.length}건을 추가했습니다. 현재 총 ${secHistory.length}건`);
+});
+
+document.getElementById('secApplyFilter').addEventListener('click', ()=>{
+  if(!secHistory.length){ alert('히스토리가 비어 있습니다. 먼저 "히스토리에 추가"를 눌러주세요.'); return; }
+  const from = document.getElementById('secDateFrom').value;
+  const to = document.getElementById('secDateTo').value;
+  const dated = secHistory.filter(r=>r.date);
+  const noDate = secHistory.length - dated.length;
+  const filtered = dated.filter(r => (!from || r.date>=from) && (!to || r.date<=to));
+  const label = `기간 필터 결과 (${from||'전체'} ~ ${to||'전체'}, ${filtered.length}건${noDate?`, 날짜없음 ${noDate}건 제외`:''})`;
+  renderSecFromRows(filtered, label);
+});
+
+document.getElementById('secClearFilter').addEventListener('click', ()=>{
+  document.getElementById('secDateFrom').value = '';
+  document.getElementById('secDateTo').value = '';
+  if(secHistory.length){
+    renderSecFromRows(secHistory, `히스토리 전체 (${secHistory.length}건)`);
+  } else if(window.secCurrentRows){
+    renderSecFromRows(window.secCurrentRows, `현재 업로드 파일 (${window.secCurrentRows.length}건)`);
+  }
+});
+
+document.getElementById('secExportHistory').addEventListener('click', ()=>{
+  if(!secHistory.length){ alert('저장할 히스토리가 없습니다.'); return; }
+  const blob = new Blob([JSON.stringify(secHistory, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `security_history_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('secImportHistory').addEventListener('change', e=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    try{
+      const parsed = JSON.parse(ev.target.result);
+      if(!Array.isArray(parsed)) throw new Error('배열 형식이 아님');
+      secHistory = parsed;
+      updateSecHistoryStatus(`히스토리 파일 불러옴`);
+      alert(`히스토리 ${secHistory.length}건을 불러왔습니다. (기존 화면의 히스토리는 이 파일 내용으로 대체됩니다)`);
+    }catch(err){
+      alert('히스토리 파일을 읽을 수 없습니다. 이 도구에서 내보낸 JSON 파일인지 확인해주세요.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+document.getElementById('secReset').addEventListener('click', ()=>{
+  document.getElementById('secOutput').innerHTML='';
+  document.getElementById('secMap').style.display='none';
+  document.getElementById('secMap').innerHTML='';
+  document.getElementById('secFname').textContent='';
+  document.getElementById('secFile').value='';
+  document.getElementById('secGenerate').disabled = true;
+  document.getElementById('secReset').style.display='none';
+  secCharts.forEach(c=>c.destroy()); secCharts=[];
+});
+
+function renderSecOutput(names, qtyArr, total){
+  secCharts.forEach(c=>c.destroy()); secCharts=[];
+  const el = document.getElementById('secOutput');
+  el.innerHTML = `
+    <div class="charts">
+      <div class="chart-card full">
+        <h3>모델별 수량</h3>
+        <button class="ghost save-btn" data-c="q1">PNG 저장</button>
+        <canvas id="secChart1"></canvas>
+      </div>
+      <div class="chart-card full">
+        <h3>비율</h3>
+        <button class="ghost save-btn" data-c="q2">PNG 저장</button>
+        <canvas id="secChart2"></canvas>
+      </div>
+    </div>
+    <table class="datatable">
+      <thead><tr><th>모델명</th><th>수량</th><th>비율</th></tr></thead>
+      <tbody>
+        ${names.map((n,i)=>`<tr><td>${n}</td><td class="num">${qtyArr[i]}</td><td class="num">${(qtyArr[i]/total*100).toFixed(1)}%</td></tr>`).join('')}
+        <tr><td><strong>총합계</strong></td><td class="num"><strong>${total}</strong></td><td></td></tr>
+      </tbody>
+    </table>
+  `;
+
+  const c1 = new Chart(document.getElementById('secChart1'), {
+    type:'bar',
+    data:{ labels:names, datasets:[{
+      label:'수량', data:qtyArr,
+      backgroundColor: names.map((_,i)=>PALETTE[i%PALETTE.length])
+    }]},
+    options:{
+      indexAxis:'y', responsive:true,
+      layout:{ padding:{ right: 24 } },
+      plugins:{
+        legend:{ display:false },
+        datalabels:{
+          display:true, anchor:'end', align:'end', offset:2,
+          font:{size:11}, color:'#33414d',
+          formatter:(v)=> v === 0 ? '' : v
+        }
+      },
+      scales:{ x:{ beginAtZero:true, grace:'12%' } }
+    }
+  });
+  const piePad = computePiePadding(names, qtyArr);
+  const c2 = new Chart(document.getElementById('secChart2'), {
+    type:'pie',
+    data:{ labels:names, datasets:[{ data:qtyArr, backgroundColor:names.map((_,i)=>PALETTE[i%PALETTE.length]) }]},
+    options:{
+      responsive:true,
+      layout:{ padding:{ left:piePad, right:piePad, top:26, bottom:26 } },
+      plugins:{
+        legend:{ display:false },
+        datalabels:{ display:false },
+        pieOutsideLabels:{ minPercent: 1 }
+      }
+    }
+  });
+  secCharts = [c1,c2];
+
+  el.querySelectorAll('.save-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const map = {q1:'secChart1', q2:'secChart2'};
+      savePNG(document.getElementById(map[btn.dataset.c]), map[btn.dataset.c]+'.png');
+    });
+  });
+}
+
+// drag & drop 보조
+['serverDrop','secDrop'].forEach(id=>{
+  const el = document.getElementById(id);
+  const inputId = id === 'serverDrop' ? 'serverFile' : 'secFile';
+  el.addEventListener('dragover', e=>{ e.preventDefault(); el.classList.add('drag'); });
+  el.addEventListener('dragleave', ()=> el.classList.remove('drag'));
+  el.addEventListener('drop', e=>{
+    e.preventDefault(); el.classList.remove('drag');
+    if(e.dataTransfer.files.length){
+      document.getElementById(inputId).files = e.dataTransfer.files;
+      document.getElementById(inputId).dispatchEvent(new Event('change'));
+    }
+  });
+});
+
 </script>
 </body>
 </html>

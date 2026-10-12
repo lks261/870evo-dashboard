@@ -20,7 +20,7 @@ scripts/retry_compuzone_if_missing.py     ← 컴퓨존 재시도용 헬퍼
 data/ssd/latest.json, history.json        ← SSD 최신/누적 데이터
 data/ram/latest.json, history.json        ← RAM 최신/누적 데이터
 data/market_news/latest.json, history.json ← 시장동향 최신/누적 데이터
-index.html                                ← 공개될 대시보드 (SSD/RAM/시장동향 탭)
+index.html                                ← 공개될 대시보드 (SSD/RAM/시장동향/입출고 탭)
 ```
 
 품목군(SSD/RAM/시장동향)마다 데이터 파일이 완전히 분리되어 있어서, 대시보드 상단
@@ -42,6 +42,14 @@ Fusion Worldwide의 월간 리포트 "The Greensheet"에서 **메모리(DRAM/RDI
 처음 실행했을 때 "경고: '메모리' 섹션을 못 찾았습니다" 같은 메시지가 뜨면
 `scripts/scrape_market_news.py`의 `find_section_bullets()` 탐색 방식을
 실제 페이지 구조에 맞게 조정해야 할 수 있습니다.
+
+## 입출고 탭 (분기 보고서의 "입출고 현황" 대체)
+
+재고관리 프로그램에서 뽑은 CSV/엑셀을 이 탭에서 직접 올리면, 서버/보안장비 입출고
+표·막대·파이 차트가 자동으로 만들어집니다(PNG 저장 버튼으로 PPT에도 붙일 수 있음).
+다른 탭과 달리 **자동 크롤링이 아니라 사용자가 파일을 올리는 방식**이라 Actions와
+무관하고, 파일은 서버로 올라가지 않고 브라우저 안에서만 처리됩니다.
+누적/기간조회는 "히스토리 JSON 저장 → 다음 분기에 불러오기" 방식입니다.
 
 ## SSD 데이터 형식
 
