@@ -1,42 +1,7 @@
 {
-  "updated_at": "2026-10-11T14:42:05.841215+09:00",
-  "updated_at_display": "2026-10-11 14:42",
+  "updated_at": "2026-10-12T14:52:09.711713+09:00",
+  "updated_at_display": "2026-10-12 14:52",
   "items": [
-    {
-      "site": "컴퓨존",
-      "source_type": "정품",
-      "capacity": "250GB",
-      "price_krw": 239000,
-      "url": "https://www.compuzone.co.kr/product/product_detail.htm?ProductNo=755258&opt_chk=Y"
-    },
-    {
-      "site": "컴퓨존",
-      "source_type": "정품",
-      "capacity": "500GB",
-      "price_krw": 352000,
-      "url": "https://www.compuzone.co.kr/product/product_detail.htm?ProductNo=755259&opt_chk=Y"
-    },
-    {
-      "site": "컴퓨존",
-      "source_type": "정품",
-      "capacity": "1TB",
-      "price_krw": 495000,
-      "url": "https://www.compuzone.co.kr/product/product_detail.htm?ProductNo=755257&opt_chk=Y"
-    },
-    {
-      "site": "컴퓨존",
-      "source_type": "정품",
-      "capacity": "2TB",
-      "price_krw": 1353000,
-      "url": "https://www.compuzone.co.kr/product/product_detail.htm?ProductNo=755256&opt_chk=Y"
-    },
-    {
-      "site": "컴퓨존",
-      "source_type": "정품",
-      "capacity": "4TB",
-      "price_krw": 2702000,
-      "url": "https://www.compuzone.co.kr/product/product_detail.htm?ProductNo=755255&opt_chk=Y"
-    },
     {
       "site": "다나와",
       "source_type": "병행수입",
@@ -97,7 +62,7 @@
       "site": "다나와",
       "source_type": "정품",
       "capacity": "500GB",
-      "price_krw": 292130,
+      "price_krw": 292110,
       "pcode": "13190519",
       "url": "https://prod.danawa.com/info/?pcode=13190519&cate=112760"
     },
@@ -113,7 +78,7 @@
       "site": "다나와",
       "source_type": "정품",
       "capacity": "2TB",
-      "price_krw": 1006950,
+      "price_krw": 1006910,
       "pcode": "13190630",
       "url": "https://prod.danawa.com/info/?pcode=13190630&cate=112760"
     },
@@ -121,7 +86,7 @@
       "site": "다나와",
       "source_type": "정품",
       "capacity": "4TB",
-      "price_krw": 1989050,
+      "price_krw": 1989020,
       "pcode": "13190711",
       "url": "https://prod.danawa.com/info/?pcode=13190711&cate=112760"
     },
@@ -132,6 +97,41 @@
       "price_krw": 4510900,
       "pcode": "106736903",
       "url": "https://prod.danawa.com/info/?pcode=106736903&cate=112760"
+    },
+    {
+      "site": "컴퓨존",
+      "source_type": "정품",
+      "capacity": "250GB",
+      "price_krw": 239000,
+      "url": "https://www.compuzone.co.kr/product/product_detail.htm?ProductNo=755258&opt_chk=Y"
+    },
+    {
+      "site": "컴퓨존",
+      "source_type": "정품",
+      "capacity": "500GB",
+      "price_krw": 352000,
+      "url": "https://www.compuzone.co.kr/product/product_detail.htm?ProductNo=755259&opt_chk=Y"
+    },
+    {
+      "site": "컴퓨존",
+      "source_type": "정품",
+      "capacity": "1TB",
+      "price_krw": 495000,
+      "url": "https://www.compuzone.co.kr/product/product_detail.htm?ProductNo=755257&opt_chk=Y"
+    },
+    {
+      "site": "컴퓨존",
+      "source_type": "정품",
+      "capacity": "2TB",
+      "price_krw": 1353000,
+      "url": "https://www.compuzone.co.kr/product/product_detail.htm?ProductNo=755256&opt_chk=Y"
+    },
+    {
+      "site": "컴퓨존",
+      "source_type": "정품",
+      "capacity": "4TB",
+      "price_krw": 2702000,
+      "url": "https://www.compuzone.co.kr/product/product_detail.htm?ProductNo=755255&opt_chk=Y"
     }
   ]
 }
