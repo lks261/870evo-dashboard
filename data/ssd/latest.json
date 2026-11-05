@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-10-12T14:52:09.711713+09:00",
-  "updated_at_display": "2026-10-12 14:52",
+  "updated_at": "2026-11-05T10:06:29.317992+09:00",
+  "updated_at_display": "2026-11-05 10:06",
   "items": [
     {
       "site": "다나와",
@@ -132,6 +132,13 @@
       "capacity": "4TB",
       "price_krw": 2702000,
       "url": "https://www.compuzone.co.kr/product/product_detail.htm?ProductNo=755255&opt_chk=Y"
+    },
+    {
+      "site": "컴퓨존",
+      "source_type": "정품",
+      "capacity": "8TB",
+      "price_krw": 4720000,
+      "url": "https://www.compuzone.co.kr/product/product_detail.htm?ProductNo=1325879&opt_chk=Y"
     }
   ]
 }
