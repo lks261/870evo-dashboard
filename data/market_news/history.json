@@ -30,6 +30,31 @@
           "Mellanox 200G/400G ConnectX-7 NIC는 수요 증가로 2027년 초 공급 부족에 진입할 것으로 예상된다."
         ]
       }
+    },
+    {
+      "collected_at": "2026-11-18",
+      "report_title": "The Greensheet 2026년 10월",
+      "report_url": "https://info.fusionww.com/ko/resources/the-greensheet-2026년-10월",
+      "sections": {
+        "key_topics": [
+          "LINKEDIN",
+          "TWITTER",
+          "EMAIL",
+          "FACEBOOK"
+        ],
+        "memory": [
+          "LINKEDIN",
+          "TWITTER",
+          "EMAIL",
+          "FACEBOOK"
+        ],
+        "storage": [
+          "LINKEDIN",
+          "TWITTER",
+          "EMAIL",
+          "FACEBOOK"
+        ]
+      }
     }
   ]
 }
