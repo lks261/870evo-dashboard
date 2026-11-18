@@ -2,8 +2,8 @@ name: 870 EVO 가격 수집
 
 on:
   schedule:
-    # 매일 UTC 00:00 = 한국시간(KST) 09:00
-    - cron: "17 0 * * 1,4"   # 정각(0분) 대신 17분으로 — GitHub Actions는 매시 정각에 몰려서 지연/스킵되기 쉬움
+    # 월요일·목요일 09:17 (KST)
+    - cron: "17 0 * * 1,4"
   workflow_dispatch: {}   # 우측 상단 "Run workflow" 버튼으로 수동 실행도 가능
 
 permissions:
@@ -24,7 +24,11 @@ jobs:
       - name: 라이브러리 설치
         run: pip install requests beautifulsoup4
 
+      - name: 다나와 목업 테스트
+        run: python -m unittest discover -s tests
+
       - name: 다나와 SSD 크롤링 실행
+        id: danawa_ssd
         run: python scripts/scrape_870evo.py
         continue-on-error: true   # 한쪽이 실패해도 다른 쪽 결과는 커밋되도록
 
@@ -33,14 +37,24 @@ jobs:
         continue-on-error: true   # 컴퓨존이 간헐적으로 접속 차단될 수 있음 (재시도는 스크립트 내부에서 처리)
 
       - name: 다나와 서버 RAM 크롤링 실행
+        id: danawa_ram
         run: python scripts/scrape_ram.py
         continue-on-error: true
 
       - name: 결과 커밋 & 푸시
-        if: always()   # 위 단계가 실패했더라도 성공한 쪽 결과는 반드시 커밋
+        # 수집 단계는 continue-on-error로 진행하므로 성공한 소스의 데이터는 커밋된다.
         run: |
           git config user.name "870evo-bot"
           git config user.email "actions@users.noreply.github.com"
           git add data/
           git diff --staged --quiet && echo "변경 없음, 커밋 생략" || git commit -m "chore: 가격 데이터 업데이트 $(date -u +'%Y-%m-%d %H:%M UTC')"
           git push
+
+      - name: 다나와 수집 실패 보고
+        if: ${{ always() && (steps.danawa_ssd.outcome == 'failure' || steps.danawa_ram.outcome == 'failure') }}
+        env:
+          SSD_OUTCOME: ${{ steps.danawa_ssd.outcome }}
+          RAM_OUTCOME: ${{ steps.danawa_ram.outcome }}
+        run: |
+          echo "::error::다나와 수집 실패 (SSD: $SSD_OUTCOME, RAM: $RAM_OUTCOME)"
+          exit 1
