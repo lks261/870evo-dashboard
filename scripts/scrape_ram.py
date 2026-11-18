@@ -6,12 +6,11 @@ from time import sleep
 import requests
 
 from common import merge_and_save
-from danawa import fetch_html, fetch_search, listing_prices, product_cards
+from danawa import REQUEST_DELAY, fetch_html, fetch_search, listing_prices, product_cards
 
 SITE = "다나와"
 CATEGORY_URL = "https://prod.danawa.com/list/"
 CATEGORY_PARAMS = {"cate": "11335273"}
-REQUEST_DELAY = 1.5
 CLOCK_MHZ = {
     "17000": "2133",
     "19200": "2400",
@@ -87,10 +86,13 @@ def collect():
         except requests.RequestException as error:
             print(f"[다나와 RAM] {dimm} PC4-{clock} 검색 실패: {error}")
             continue
-        for item in parse_catalog(html):
+        items = [
+            item for item in parse_catalog(html)
+            if (item["dimm_type"], item["clock"]) == (dimm, clock)
+        ]
+        print(f"[다나와 RAM] {dimm} PC4-{clock}: 유효 가격 {len(items)}건")
+        for item in items:
             key = item["dimm_type"], item["clock"], item["capacity"]
-            if key[:2] != (dimm, clock):
-                continue
             if key not in best or item["price_krw"] < best[key]["price_krw"]:
                 best[key] = item
 

@@ -6,12 +6,11 @@ from time import sleep
 import requests
 
 from common import capacity_sort_key, merge_and_save
-from danawa import fetch_search, listing_prices, product_cards
+from danawa import REQUEST_DELAY, fetch_search, listing_prices, product_cards
 
 SITE = "다나와"
 TARGET_KEYWORD = "870 EVO"
 CATE_CODE = "112760"
-REQUEST_DELAY = 2
 MAX_PAGES = 3
 VALID_CAPACITIES = {"250GB", "500GB", "1TB", "2TB", "4TB", "8TB"}
 SOURCE_TYPES = {"정품", "병행수입"}
@@ -46,21 +45,27 @@ def collect():
         for source in SOURCE_TYPES
         for capacity in VALID_CAPACITIES - {"8TB"}
     }
-    previous_html = None
-    for page in range(1, MAX_PAGES + 1):
-        if page > 1:
+    lookups = [(TARGET_KEYWORD, 1), (f"{TARGET_KEYWORD} 250", 1)]
+    lookups.extend((TARGET_KEYWORD, page) for page in range(2, MAX_PAGES + 1))
+    seen_pages = set()
+    for index, (keyword, page) in enumerate(lookups):
+        if keyword != TARGET_KEYWORD and all((source, "250GB") in best for source in SOURCE_TYPES):
+            continue
+        if index:
             sleep(REQUEST_DELAY)
         try:
-            html = fetch_search(TARGET_KEYWORD, page)
+            html = fetch_search(keyword, page)
         except requests.RequestException as error:
             if not best:
                 raise
-            print(f"[다나와 SSD] 검색 {page}페이지 조회 실패: {error}")
+            print(f"[다나와 SSD] {keyword} 검색 {page}페이지 조회 실패: {error}")
             break
-        if html == previous_html:
-            break
-        previous_html = html
-        for item in parse_page(html):
+        if html in seen_pages:
+            continue
+        seen_pages.add(html)
+        items = list(parse_page(html))
+        print(f"[다나와 SSD] {keyword} 검색 {page}페이지: 유효 가격 {len(items)}건")
+        for item in items:
             key = item["source_type"], item["capacity"]
             if key not in best or item["price_krw"] < best[key]["price_krw"]:
                 best[key] = item
