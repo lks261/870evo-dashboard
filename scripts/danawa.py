@@ -12,8 +12,7 @@ HEADERS = {"Accept-Language": "ko-KR,ko;q=0.9"}
 REQUEST_DELAY = 10
 CARD_SELECTOR = "li.prod_item, [id^='productItem'], li.product-item, li.product_item"
 TITLE_SELECTOR = "a.prod_name, .prod_name a, a.product_name, .product_name a, a.product-name"
-SEARCH_TITLE_SELECTOR = ":scope > div > div > p > a[href*='pcode=']"
-SEARCH_CARD_SELECTOR = "#DnwSearchContents li:has(> div > div > p > a[href*='pcode='])"
+SEARCH_TITLE_SELECTOR = "#DnwSearchContents li > div > div > p > a[href*='pcode=']"
 PRICE_SELECTOR = ".price_sect, .price_box, .lowest_price"
 UNIT_PRICE = re.compile(r"(?<!\d)[\d,]+\s*원\s*/\s*1\s*GB\b", re.I)
 TOTAL_PRICE = re.compile(r"(?<![\d,])([\d,]+)\s*원")
@@ -49,17 +48,19 @@ def pcode_of(link):
 
 def product_cards(html):
     soup = BeautifulSoup(html, "html.parser")
-    cards = soup.select(f"{CARD_SELECTOR}, {SEARCH_CARD_SELECTOR}")
-    matched = []
-    for card in cards:
-        title_link = card.select_one(TITLE_SELECTOR) or card.select_one(SEARCH_TITLE_SELECTOR)
-        if title_link and pcode_of(title_link):
+    title_links = [(card, card.select_one(TITLE_SELECTOR)) for card in soup.select(CARD_SELECTOR)]
+    # Find the title link first, then walk to its card without a complex :has() selector.
+    title_links.extend((link.find_parent("li"), link) for link in soup.select(SEARCH_TITLE_SELECTOR))
+    matched = {}
+    for card, title_link in title_links:
+        if card is not None and title_link is not None and pcode_of(title_link):
             title = " ".join(title_link.get_text().split())
-            matched.append((card, title))
+            if title:
+                matched.setdefault(id(card), (card, title))
     if not matched:
         page_title = text_of(soup.title)[:100] if soup.title else "(제목 없음)"
         print(f"[다나와 HTML] 상품명·상품코드가 있는 카드 0개, 페이지 제목 {page_title!r}")
-    return matched
+    return list(matched.values())
 
 
 def capacities(text):
