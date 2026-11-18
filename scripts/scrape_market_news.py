@@ -7,17 +7,11 @@ Fusion Worldwide "The Greensheet" 월간 시장 리포트에서
     1. 리소스 목록 페이지(/ko/resources)에서 "Greensheet" 최신 글 링크를 찾는다.
        (URL이 "the-greensheet-2026년-9월"처럼 매달 바뀌어서, 날짜로 계산해
         접속하지 않고 목록에서 매번 최신 링크를 찾는 방식을 쓴다)
-    2. 그 리포트 페이지에서 "주요 주제", "메모리", "스토리지" 섹션의 불릿만 뽑는다.
-    3. 각 불릿은 원문 그대로 두지 않고 앞부분(핵심 문장)만 짧게 잘라서 저장한다.
-       (원문 전체를 그대로 복제하지 않기 위함. 전체 맥락이 필요하면 원문 링크로
-        연결되는 "출처 보기" 버튼을 대시보드에 같이 노출한다)
+    2. 리포트의 "주요 주제", "메모리", "스토리지" 섹션에서 문단과 목록을 읽는다.
+    3. 섹션별로 핵심 문장을 최대 3개 저장한다. 원문 링크도 함께 저장한다.
 
 주기: 월간 리포트이므로 하루 1회가 아니라 월 1회(매달 초) 실행하면 충분하다.
 
-주의:
-    - 이 사이트는 실제 접속 테스트를 못 해봤다(샌드박스 네트워크 제약).
-      최초 실행 시 구조가 안 맞으면 Actions 로그의 경고 메시지를 보고
-      find_section_bullets()의 탐색 방식을 조정해야 할 수 있다.
 """
 
 import re
@@ -51,7 +45,19 @@ SECTION_HEADINGS = {
     "storage": ["스토리지"],
 }
 
-MAX_BULLET_LEN = 90  # 원문을 그대로 옮기지 않기 위해 핵심 문장만 짧게 자름
+HEADING_TAGS = ("h1", "h2", "h3", "h4", "h5", "h6")
+SECTION_BOUNDARIES = (
+    *(name for names in SECTION_HEADINGS.values() for name in names),
+    "시장 변동성 지수", "제품 업데이트", "네트워킹", "수동부품 및 원자재",
+    "집적 회로", "CPU", "GPU", "조달 우선순위", "리소스로 돌아가기",
+)
+SHARE_LABELS = {"linkedin", "twitter", "email", "e-mail", "facebook", "공유"}
+SECTION_TERMS = {
+    "memory": re.compile(r"(?<![A-Z0-9])(?:DDR\d*|LPDDR\d*[A-Z]?|DRAM|RDIMM|HBM\d*)(?![A-Z0-9])", re.I),
+    "storage": re.compile(r"(?<![A-Z0-9])(?:SSD|NAND)(?![A-Z0-9])|낸드", re.I),
+}
+MAX_ITEMS = 3
+PREFERRED_SENTENCE_LENGTH = 120
 
 
 def fetch(url: str) -> str:
@@ -129,41 +135,56 @@ def find_latest_report_url() -> tuple[str, str] | None:
     return None
 
 
-def find_section_bullets(soup: BeautifulSoup, heading_keywords: list[str]) -> list[str]:
-    """제목 텍스트(strong/b 태그)가 heading_keywords로 시작하는 지점을 찾아서,
-    그 뒤에 나오는 <ul><li> 불릿들을 가져온다."""
-    heading_tag = None
-    for tag in soup.find_all(["strong", "b"]):
-        text = tag.get_text(strip=True)
-        if any(text.startswith(kw) for kw in heading_keywords):
-            heading_tag = tag
+def heading_matches(text: str, keywords) -> bool:
+    return any(re.match(rf"^{re.escape(kw)}\s*(?:$|[:：(（])", text) for kw in keywords)
+
+
+def find_section_items(soup: BeautifulSoup, heading_keywords: list[str]) -> list[str]:
+    """Collect sibling paragraphs and list items until the next section."""
+    heading = next((
+        tag for tag in soup.find_all(("p", *HEADING_TAGS))
+        if not tag.find_parent(["table", "li", "nav", "footer"])
+        and heading_matches(tag.get_text(" ", strip=True), heading_keywords)
+    ), None)
+    if heading is None:
+        return []
+
+    items = []
+    for block in heading.find_next_siblings():
+        if block.name in (*HEADING_TAGS, "table", "nav", "footer"):
             break
-
-    if heading_tag is None:
-        return []
-
-    # 제목이 속한 블록(p/div/h*)을 찾고, 그 뒤에 나오는 첫 <ul>을 찾는다
-    container = heading_tag.find_parent(["p", "div", "h1", "h2", "h3", "h4", "li"]) or heading_tag
-    next_ul = container.find_next("ul")
-    if next_ul is None:
-        return []
-
-    bullets = []
-    for li in next_ul.find_all("li", recursive=False):
-        text = li.get_text(" ", strip=True)
-        if text:
-            bullets.append(text)
-    return bullets
+        if block.name not in ("p", "ul", "ol"):
+            continue
+        paragraphs = [block] if block.name == "p" else block.find_all("li", recursive=False)
+        for paragraph in paragraphs:
+            text = re.sub(r"\s+", " ", paragraph.get_text(" ", strip=True))
+            if heading_matches(text, SECTION_BOUNDARIES):
+                return items
+            if text and text.casefold() not in SHARE_LABELS and not all(
+                node.find_parent("a") for node in paragraph.find_all(string=True) if node.strip()
+            ):
+                items.append(text)
+    return items
 
 
-def shorten(text: str, max_len: int = MAX_BULLET_LEN) -> str:
-    """원문을 그대로 옮기지 않도록, 핵심 문장(첫 문장 또는 앞부분)만 짧게 자른다."""
-    # 첫 문장(마침표 기준)만 취하고, 그래도 길면 글자 수로 자름
-    first_sentence = re.split(r"(?<=[.!?])\s", text.strip())[0]
-    candidate = first_sentence if first_sentence else text
-    if len(candidate) > max_len:
-        candidate = candidate[:max_len].rstrip() + "…"
-    return candidate
+def summarize(text: str, terms: re.Pattern | None) -> str:
+    """Keep complete sentences. Prefer short sentences with relevant figures."""
+    text = re.sub(r"\s+([:：,.!?])", r"\1", text)
+    label, separator, body = text.partition(":")
+    has_label = bool(separator and len(label) <= 48 and body.strip())
+    sentences = re.split(r"(?<=[.!?])\s+(?=[가-힣A-Z0-9])", body.strip() if has_label else text)
+    prefix = f"{label}: " if has_label else ""
+    candidates = [s for s in sentences if len(s) <= PREFERRED_SENTENCE_LENGTH]
+    if terms:
+        relevant = [s for s in candidates if terms.search(s)]
+        if relevant:
+            candidates = relevant
+    if candidates:
+        sentence = max(candidates, key=lambda s: bool(re.search(r"\d\s*(?:%|주|개월|GB|TB)", s, re.I)))
+        return prefix + sentence if len(prefix + sentence) <= PREFERRED_SENTENCE_LENGTH else sentence
+    if has_label:
+        return label
+    return sentences[0]
 
 
 def collect():
@@ -180,15 +201,19 @@ def collect():
 
     sections = {}
     for key, keywords in SECTION_HEADINGS.items():
-        bullets = find_section_bullets(soup, keywords)
+        terms = SECTION_TERMS.get(key)
+        bullets = find_section_items(soup, keywords)
+        if terms:
+            bullets = [bullet for bullet in bullets if terms.search(bullet)]
         if not bullets:
             print(f"  경고: '{keywords[0]}' 섹션을 못 찾았습니다.")
-        sections[key] = [shorten(b) for b in bullets]
+        summaries = dict.fromkeys(summarize(b, terms) for b in bullets)
+        sections[key] = list(summaries)[:MAX_ITEMS]
         for b in sections[key]:
             print(f"  [{key}] {b}")
 
-    if not any(sections.values()):
-        print("경고: 어떤 섹션도 못 찾았습니다. 페이지 구조가 바뀌었을 수 있습니다.")
+    if not all(sections.values()):
+        print("경고: 일부 섹션에 유효한 본문이 없어 기존 데이터를 유지합니다.")
         return None
 
     return {"title": title, "url": url, "sections": sections}
@@ -199,7 +224,7 @@ def main():
     result = collect()
     if not result:
         print("이번 회차는 저장하지 않고 종료합니다.")
-        return
+        raise SystemExit(1)
 
     now_kst = datetime.now(KST)
     latest_path, history_path = dataset_paths(DATASET)
