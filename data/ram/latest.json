@@ -1,6 +1,6 @@
 {
-  "updated_at": "2026-11-18T15:33:22.771831+09:00",
-  "updated_at_display": "2026-11-18 15:33",
+  "updated_at": "2026-11-19T16:35:42.920704+09:00",
+  "updated_at_display": "2026-11-19 16:35",
   "items": [
     {
       "site": "다나와",
@@ -8,9 +8,9 @@
       "dimm_type": "RDIMM",
       "clock": "17000",
       "capacity": "16GB",
-      "price_krw": 237050,
+      "price_krw": 238470,
       "pcode": "3201268",
-      "matched_text": "1 위 16GB 14,816원/1GB 237,050원 8 몰 VS상품비교에 추가 + VS상품비교",
+      "matched_text": "1 위 16GB 14,904원/1GB 238,470원 8 몰 VS상품비교에 추가 + VS상품비교",
       "url": "https://prod.danawa.com/info/?pcode=3201268"
     },
     {
@@ -87,7 +87,7 @@
       "capacity": "32GB",
       "price_krw": 514760,
       "pcode": "10824564",
-      "matched_text": "1 위 32GB 16,086원/1GB 514,760원 16 몰 VS상품비교에 추가 + VS상품비교",
+      "matched_text": "1 위 32GB 16,086원/1GB 514,760원 15 몰 VS상품비교에 추가 + VS상품비교",
       "url": "https://prod.danawa.com/info/?pcode=10824564"
     },
     {

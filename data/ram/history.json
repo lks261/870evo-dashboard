@@ -6817,6 +6817,231 @@
           "url": "https://prod.danawa.com/info/?pcode=37693463"
         }
       ]
+    },
+    {
+      "date": "2026-11-19",
+      "items": [
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "RDIMM",
+          "clock": "17000",
+          "capacity": "16GB",
+          "price_krw": 238470,
+          "pcode": "3201268",
+          "matched_text": "1 위 16GB 14,904원/1GB 238,470원 8 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=3201268"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "RDIMM",
+          "clock": "17000",
+          "capacity": "32GB",
+          "price_krw": 495000,
+          "pcode": "5383117",
+          "matched_text": "32GB 15,469원/1GB 495,000원 5 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=5383117"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "RDIMM",
+          "clock": "17000",
+          "capacity": "8GB",
+          "price_krw": 126800,
+          "pcode": "3201319",
+          "matched_text": "2 위 8GB 15,850원/1GB 126,800원 5 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=3201319"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "RDIMM",
+          "clock": "19200",
+          "capacity": "32GB",
+          "price_krw": 545000,
+          "pcode": "5721713",
+          "matched_text": "1 위 32GB 17,031원/1GB 545,000원 7 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=5721713"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "RDIMM",
+          "clock": "19200",
+          "capacity": "16GB",
+          "price_krw": 330000,
+          "pcode": "5448638",
+          "matched_text": "16GB 20,625원/1GB 330,000원 3 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=5448638"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "RDIMM",
+          "clock": "19200",
+          "capacity": "8GB",
+          "price_krw": 175000,
+          "pcode": "5721454",
+          "matched_text": "2 위 8GB 21,875원/1GB 175,000원 4 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=5721454"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "RDIMM",
+          "clock": "21300",
+          "capacity": "16GB",
+          "price_krw": 266800,
+          "pcode": "6393108",
+          "matched_text": "2 위 16GB 16,675원/1GB 266,800원 5 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=6393108"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "RDIMM",
+          "clock": "21300",
+          "capacity": "32GB",
+          "price_krw": 514760,
+          "pcode": "10824564",
+          "matched_text": "1 위 32GB 16,086원/1GB 514,760원 15 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=10824564"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "RDIMM",
+          "clock": "21300",
+          "capacity": "8GB",
+          "price_krw": 195000,
+          "pcode": "11631620",
+          "matched_text": "8GB 24,375원/1GB 195,000원 4 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=11631620"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "RDIMM",
+          "clock": "25600",
+          "capacity": "64GB",
+          "price_krw": 1539990,
+          "pcode": "13433147",
+          "matched_text": "2 위 64GB 24,062원/1GB 1,539,990원 20 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=13433147"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "RDIMM",
+          "clock": "25600",
+          "capacity": "32GB",
+          "price_krw": 637000,
+          "pcode": "13432970",
+          "matched_text": "1 위 32GB 19,906원/1GB 637,000원 28 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=13432970"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "RDIMM",
+          "clock": "25600",
+          "capacity": "16GB",
+          "price_krw": 395000,
+          "pcode": "13432766",
+          "matched_text": "16GB 24,688원/1GB 395,000원 6 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=13432766"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "RDIMM",
+          "clock": "25600",
+          "capacity": "8GB",
+          "price_krw": 230000,
+          "pcode": "15753614",
+          "matched_text": "8GB 28,750원/1GB 230,000원 4 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=15753614"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "EDIMM",
+          "clock": "21300",
+          "capacity": "32GB",
+          "price_krw": 960000,
+          "pcode": "17814587",
+          "matched_text": "32GB 30,000원/1GB 960,000원 1 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=17814587"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "EDIMM",
+          "clock": "21300",
+          "capacity": "16GB",
+          "price_krw": 600000,
+          "pcode": "11633126",
+          "matched_text": "2 위 16GB 37,500원/1GB 600,000원 1 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=11633126"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "EDIMM",
+          "clock": "21300",
+          "capacity": "8GB",
+          "price_krw": 290000,
+          "pcode": "11631995",
+          "matched_text": "1 위 8GB 36,250원/1GB 290,000원 2 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=11631995"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "EDIMM",
+          "clock": "23400",
+          "capacity": "32GB",
+          "price_krw": 1034000,
+          "pcode": "15798590",
+          "matched_text": "1 위 32GB 32,313원/1GB 1,034,000원 3 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=15798590"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "EDIMM",
+          "clock": "23400",
+          "capacity": "16GB",
+          "price_krw": 600000,
+          "pcode": "15798569",
+          "matched_text": "16GB 37,500원/1GB 600,000원 1 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=15798569"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "EDIMM",
+          "clock": "23400",
+          "capacity": "8GB",
+          "price_krw": 237560,
+          "pcode": "13826867",
+          "matched_text": "2 위 8GB 29,695원/1GB 237,560원 2 몰 VS상품비교에 추가 + VS상품비교",
+          "url": "https://prod.danawa.com/info/?pcode=13826867"
+        },
+        {
+          "site": "다나와",
+          "category": "RAM",
+          "dimm_type": "EDIMM",
+          "clock": "25600",
+          "capacity": "32GB",
+          "price_krw": 970000,
+          "pcode": "37693463",
+          "matched_text": "이미지 보기 삼성 전자 DDR4 - 3200 ECC/Unbuffered 서버용 / DDR4 / 3200 MHz (PC4-25600) / 램개수 : 1개 / ECC / 히트싱크 : 미포함 닫기 24.02. 등록 관심 ",
+          "url": "https://prod.danawa.com/info/?pcode=37693463"
+        }
+      ]
     }
   ]
 }
