@@ -51,6 +51,20 @@
   .tag.compuzone{ background:#eef1fb; color:#4a56b8; }
   td.cap-cell{ font-weight:700; color:var(--teal-900); background:#fafcfc; vertical-align:middle; }
 
+  .price-tools{margin-bottom:12px}
+  .price-tools .ghost{margin-left:auto}
+  .price-table-wrap{overflow-x:auto}
+  .price-table-wrap table{min-width:590px}
+  .price-copy-status{display:block;margin-top:6px;font-size:12px;color:var(--teal-700)}
+  .previous-change{white-space:nowrap;font-variant-numeric:tabular-nums}
+  .previous-up{color:#9c3828}.previous-down{color:#1c5985}
+  .stale-price{display:inline-block;margin-left:6px;background:#fff1e1;color:#884614}
+  .best-price{display:inline-block;margin-left:6px;background:#e8f4ec;color:#276146}
+  .price-tools details{color:var(--ink-soft);font-size:12px}
+  #tsBox details summary,.ram-baseline summary{cursor:pointer}
+  #tsBox details{color:#884614}
+  .ram-baseline{margin-top:12px}
+  .ram-baseline p{margin:7px 0 0}
   .chart-controls{ display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
   .chart-controls label{ font-size:12px; color:var(--ink-soft); font-weight:600; }
   .chart-controls select{
@@ -189,11 +203,17 @@
   <div class="tabpanel active" id="tabpanel-ssd">
     <div class="card">
       <h2>최신 용량별 단가</h2>
+      <div class="chart-controls price-tools">
+        <label>용량 <select id="ssdTableCap"><option value="">전체</option></select></label>
+        <label>구분 <select id="ssdTableType"><option value="">전체</option><option>정품</option><option>병행수입</option></select></label>
+        <button type="button" class="ghost small" id="ssdCopyTable" disabled>표 복사</button>
+      </div>
+      <output id="ssdCopyStatus" class="price-copy-status" aria-live="polite"></output>
       <div id="ssdTableArea"><div class="empty">불러오는 중...</div></div>
     </div>
 
     <div class="card">
-      <h2>가격 추이 (부가세포함)</h2>
+      <h2>가격 추이 (부가세 별도)</h2>
       <div class="chart-controls">
         <label>용량</label>
         <select id="ssdCapacitySelect"></select>
@@ -202,7 +222,7 @@
     </div>
 
     <div class="card">
-      <h2>구분별 전체 용량 추이 (부가세포함)</h2>
+      <h2>구분별 전체 용량 추이 (부가세 별도)</h2>
       <div class="chart-controls">
         <label>구분</label>
         <select id="ssdSourceSelect"></select>
@@ -215,11 +235,19 @@
   <div class="tabpanel" id="tabpanel-ram">
     <div class="card">
       <h2>최신 용량별 단가 — 삼성전자 서버용 DDR4</h2>
+      <div class="chart-controls price-tools">
+        <label>타입 <select id="ramTableType"><option value="">전체</option><option>RDIMM</option><option>EDIMM</option></select></label>
+        <label>용량 <select id="ramTableCap"><option value="">전체</option></select></label>
+        <label>클럭 <select id="ramTableClock"><option value="">전체</option></select></label>
+        <label><input type="checkbox" id="ramShowMissing"> 미수집 규격 표시</label>
+        <button type="button" class="ghost small" id="ramCopyTable" disabled>표 복사</button>
+      </div>
+      <output id="ramCopyStatus" class="price-copy-status" aria-live="polite"></output>
       <div id="ramTableArea"><div class="empty">불러오는 중...</div></div>
     </div>
 
     <div class="card">
-      <h2>가격 추이 (부가세포함)</h2>
+      <h2>가격 추이 (부가세 별도)</h2>
       <div class="chart-controls">
         <label>용량</label>
         <select id="ramCapacitySelect"></select>
@@ -271,6 +299,7 @@
         <input type="date" id="serverDateFrom">
         <span>~</span>
         <input type="date" id="serverDateTo">
+        <label class="inline-label">분기 <select id="serverQuarter"><option value="">직접 지정</option></select></label>
         <button class="ghost small" id="serverApplyFilter">필터 적용</button>
         <button class="ghost small" id="serverClearFilter">전체보기</button>
       </div>
@@ -315,6 +344,7 @@
         <input type="date" id="secDateFrom">
         <span>~</span>
         <input type="date" id="secDateTo">
+        <label class="inline-label">분기 <select id="secQuarter"><option value="">직접 지정</option></select></label>
         <button class="ghost small" id="secApplyFilter">필터 적용</button>
         <button class="ghost small" id="secClearFilter">전체보기</button>
       </div>
@@ -351,7 +381,7 @@
 <script>
 // ============ 공통 유틸 ============
 function fmtWon(n){ return n.toLocaleString('ko-KR') + '원'; }
-function exclVat(n){ return Math.round(n / 1.1 / 100) * 100; }  // 추정값이므로 100원 단위로 반올림
+function exclVat(n){ return Math.round(n / 1.1 / 100) * 100; }
 
 // ============ 시세 이탈 감지 ============
 // 최근 히스토리(오늘 제외)에서 같은 조합의 중앙값을 구해서, 오늘 값이 그보다
@@ -365,22 +395,78 @@ function median(arr){
   return s.length % 2 ? s[mid] : (s[mid-1]+s[mid])/2;
 }
 
-function checkAnomaly(history, today, matchFn){
-  const priorPrices = (history.entries || [])
-    .filter(e => e.date !== today)
-    .flatMap(e => (e.items||[]).filter(matchFn).map(it => it.price_krw));
-  const baseline = median(priorPrices);
-  return { baseline, priorCount: priorPrices.length };
+function escapeText(value){
+  return String(value ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-function anomalyBadge(price, baseline, priorCount){
-  if(baseline === null || priorCount < 2) return ''; // 비교할 과거 데이터가 부족하면 표시 안 함
-  const diff = (price - baseline) / baseline;
-  if(Math.abs(diff) < ANOMALY_THRESHOLD) return '';
-  const pct = Math.round(diff * 100);
-  const dir = diff > 0 ? '높음' : '낮음';
-  const title = `최근 시세(중앙값 ${fmtWon(Math.round(baseline))}) 대비 ${Math.abs(pct)}% ${dir} — 매칭 오류일 수 있어 확인 필요`;
-  return `<span class="anomaly-badge" title="${title}">⚠️ 시세대비 ${diff>0?'+':''}${pct}%</span>`;
+function productLink(url, label='바로가기'){
+  if(!/^https:\/\//i.test(url || '')) return '—';
+  return `<a href="${escapeText(url)}" target="_blank" rel="noopener noreferrer">${escapeText(label)} ↗</a>`;
+}
+
+function previousPrices(history, date, matches){
+  if(!date) return [];
+  return (history.entries || []).filter(entry=>entry.date < date)
+    .map(entry=>({date:entry.date, item:(entry.items || []).find(x=>matches(x) && x.price_krw>0)}))
+    .filter(entry=>entry.item)
+    .sort((a,b)=>b.date.localeCompare(a.date));
+}
+
+function recentMedian(records, date){
+  if(!date) return null;
+  const cutoff = new Date(Date.parse(date+'T00:00:00Z') - 28*86400000).toISOString().slice(0,10);
+  const prices = records.filter(record=>record.date>=cutoff).map(record=>record.item.price_krw);
+  return prices.length >= 3 ? median(prices) : null;
+}
+
+function changePercent(current, base){
+  return current > 0 && base > 0 ? Math.round((current/base - 1)*1000)/10 : null;
+}
+
+function percentLabel(pct){
+  return pct == null ? '—' : `${pct>0 ? '+' : ''}${pct.toFixed(1)}%`;
+}
+
+function changeCell(pct){
+  return `<span class="previous-change ${pct>0?'previous-up':pct<0?'previous-down':''}">${percentLabel(pct)}</span>`;
+}
+
+function anomalyBadge(price, baseline){
+  if(baseline == null || Math.abs(price/baseline-1) < ANOMALY_THRESHOLD) return '';
+  const title = `최근 4주 중앙값 ${fmtWon(exclVat(baseline))} 대비`;
+  return `<span class="anomaly-badge" title="${title}">시세 ${percentLabel(changePercent(price, baseline))}</span>`;
+}
+
+function latestDate(latest, history){
+  return latest.updated_at_display?.slice(0,10) || latest.updated_at?.slice(0,10) ||
+    (history.entries || []).map(entry=>entry.date).sort().at(-1) || null;
+}
+
+function filterOptions(id, values, selected=''){
+  const select = document.getElementById(id);
+  select.replaceChildren(new Option('전체',''), ...values.map(value=>new Option(value.label ?? value,value.id ?? value)));
+  if([...select.options].some(o=>o.value===selected)) select.value = selected;
+}
+
+async function copyReport(rows, statusId){
+  const normalize = value => {
+    const text = String(value ?? '').replace(/[\t\r\n]+/g,' ');
+    return typeof value==='string' && /^\s*[=+\-@]/.test(text) && !/^[+-]?\d+(?:\.\d+)?%$/.test(text)
+      ? "'" + text : text;
+  };
+  const text = rows.map(row=>row.map(normalize).join('\t')).join('\n');
+  const status = document.getElementById(statusId);
+  try{
+    await navigator.clipboard.writeText(text);
+    status.textContent = '엑셀에 붙여넣을 수 있도록 복사했습니다.';
+  }catch{
+    const field = document.createElement('textarea');
+    field.value = text;
+    field.readOnly = true;
+    field.setAttribute('aria-label','복사할 표');
+    status.replaceChildren(document.createTextNode('선택된 표를 복사하세요. '),field);
+    field.select();
+  }
 }
 
 function capacitySortKey(cap){
@@ -404,7 +490,9 @@ async function loadDataset(dataset, bust){
 
 function renderTimestamp(latest){
   const box = document.getElementById('tsBox');
-  box.innerHTML = `크롤링 시각: <b>${latest.updated_at_display || '-'}</b>`;
+  const stale = latest === window.__ssdLatest ? [...ssdStaleSites] : [];
+  box.innerHTML = `크롤링 시각: <b>${escapeText(latest.updated_at_display || '-')}</b>` +
+    (stale.length ? `<details><summary>${stale.map(([site])=>escapeText(site)).join(', ')} 미갱신</summary>${stale.map(([site, date])=>`${escapeText(site)} 마지막 확인 ${escapeText(date)}`).join(' · ')}</details>` : '');
 }
 
 // ============ 탭 전환 ============
@@ -452,54 +540,68 @@ function sourceOrderIndex(it){
 let ssdHistory = null;
 let ssdTrendChart = null;
 
+const ssdStaleSites = new Map();
+const readFilter = id => document.getElementById(id).value;
+const PRICE = '부가세 별도';
+const SSD_HEADERS = ['용량','구분',PRICE,'직전 수집 대비','상품','상태'];
+const RAM_HEADERS = ['타입','용량','클럭',PRICE,'직전 수집 대비','상품','상태'];
+const priceTables = {ssd:[], ram:[]};
+
+function rememberTable(key, headers, rows){
+  priceTables[key] = [headers,...rows];
+  document.getElementById(key+'CopyTable').disabled = rows.length === 0;
+  document.getElementById(key+'CopyStatus').textContent = '';
+}
+for(const key of ['ssd','ram']){
+  document.getElementById(key+'CopyTable').addEventListener('click',()=>copyReport(priceTables[key],key+'CopyStatus'));
+}
+
 function renderSSDTable(latest, history){
   const el = document.getElementById('ssdTableArea');
-  const items = latest.items || [];
-  if(!items.length){ el.innerHTML = '<div class="empty">데이터가 없습니다.</div>'; return; }
-
-  const today = (history.entries && history.entries.length)
-    ? history.entries[history.entries.length-1].date : null;
-
-  const sorted = [...items].sort((a,b)=>{
-    const capDiff = capacitySortKey(a.capacity) - capacitySortKey(b.capacity);
-    if(capDiff !== 0) return capDiff;
-    return sourceOrderIndex(a) - sourceOrderIndex(b);
+  const today = latestDate(latest, history);
+  ssdStaleSites.clear();
+  for(const site of new Set((latest.items || []).map(item=>item.site))){
+    const last = (history.entries || []).filter(entry=>entry.date<=today &&
+      (entry.items || []).some(item=>item.site===site && item.price_krw>0))
+      .map(entry=>entry.date).sort().at(-1);
+    if(last && last < today) ssdStaleSites.set(site,last);
+  }
+  const items = (latest.items || []).filter(it=>
+    (!readFilter('ssdTableCap') || it.capacity===readFilter('ssdTableCap')) &&
+    (!readFilter('ssdTableType') || it.source_type===readFilter('ssdTableType')))
+    .sort((a,b)=>capacitySortKey(a.capacity)-capacitySortKey(b.capacity) || sourceOrderIndex(a)-sourceOrderIndex(b));
+  const minimums = new Map();
+  for(const it of items){
+    if(it.source_type==='정품' && !ssdStaleSites.has(it.site) && it.price_krw>0){
+      minimums.set(it.capacity,Math.min(minimums.get(it.capacity) ?? Infinity,it.price_krw));
+    }
+  }
+  const copies = [];
+  const rows = items.map(it=>{
+    const meta = sourceMeta(it);
+    const source = `${it.source_type} (${it.site})`;
+    const stale = ssdStaleSites.get(it.site);
+    const historyRows = previousPrices(history, stale || today, x=>
+      x.capacity===it.capacity && x.site===it.site && x.source_type===it.source_type);
+    const diff = stale ? null : changePercent(it.price_krw,historyRows[0]?.item.price_krw);
+    const best = !stale && it.source_type==='정품' && minimums.get(it.capacity)===it.price_krw;
+    const status = stale ? `이전 수집값 (${stale})` : '확인';
+    const price = exclVat(it.price_krw);
+    copies.push([it.capacity,source,price,percentLabel(diff),it.url || '',status]);
+    return `<tr><td class="cap-cell">${escapeText(it.capacity)}</td>
+      <td><span class="tag ${meta.tagClass}">${escapeText(source)}</span>${stale?'<span class="tag stale-price">이전 수집값</span>':''}</td>
+      <td>${fmtWon(price)}${best?'<span class="tag best-price">정품 최저</span>':''}${stale?'':anomalyBadge(it.price_krw,recentMedian(historyRows,today))}</td>
+      <td>${changeCell(diff)}</td><td class="link-cell">${productLink(it.url)}</td></tr>`;
   });
-
-  const groups = [];
-  sorted.forEach(it=>{
-    const last = groups[groups.length-1];
-    if(last && last.capacity === it.capacity){ last.rows.push(it); }
-    else { groups.push({ capacity: it.capacity, rows: [it] }); }
+  rememberTable('ssd',SSD_HEADERS,copies);
+  el.innerHTML = rows.length ? `<div class="price-table-wrap"><table><thead><tr><th>용량</th><th>구분</th><th>${PRICE}</th><th>직전 수집 대비</th><th>상품</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>
+    <p class="table-note">같은 용량의 최신 정품끼리 비교합니다. 시세 배지는 최근 4주 중앙값 대비 ±25% 이상일 때 표시됩니다.</p>` :
+    '<div class="empty">조건에 맞는 가격이 없습니다.</div>';
+}
+for(const id of ['ssdTableCap','ssdTableType']){
+  document.getElementById(id).addEventListener('change',()=>{
+    if(window.__ssdLatest && ssdHistory) renderSSDTable(window.__ssdLatest,ssdHistory);
   });
-
-  const rows = groups.map(g=>{
-    return g.rows.map((it, i)=>{
-      const meta = sourceMeta(it);
-      const capCell = i===0 ? `<td class="cap-cell" rowspan="${g.rows.length}">${g.capacity}</td>` : '';
-      const { baseline, priorCount } = checkAnomaly(history, today, x =>
-        x.capacity === it.capacity && x.site === it.site && x.source_type === it.source_type
-      );
-      const badge = anomalyBadge(it.price_krw, baseline, priorCount);
-      const link = it.url ? `<a href="${it.url}" target="_blank" rel="noopener">바로가기 ↗</a>` : '-';
-      return `<tr>
-        ${capCell}
-        <td><span class="tag ${meta.tagClass}">${meta.label}</span></td>
-        <td>${fmtWon(it.price_krw)}${badge}</td>
-        <td>${fmtWon(exclVat(it.price_krw))}</td>
-        <td class="link-cell">${link}</td>
-      </tr>`;
-    }).join('');
-  }).join('');
-
-  el.innerHTML = `
-    <table>
-      <thead><tr><th>용량</th><th>구분</th><th>가격(부가세포함)</th><th>가격(부가세별도, 추정)</th><th>상품</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <p class="table-note">※ 부가세별도 금액은 크롤링되는 부가세포함 가격을 기준으로 계산한 추정값입니다 (÷1.1, 반올림).</p>
-    <p class="table-note">⚠️ 배지는 최근 시세(중앙값) 대비 ±25% 이상 차이날 때 표시됩니다. 매칭 오류 가능성이 있으니 배지가 붙은 항목은 링크로 직접 확인해보시는 걸 권장합니다.</p>
-  `;
 }
 
 function populateSSDCapacitySelect(history){
@@ -517,7 +619,7 @@ function renderSSDTrendChart(history, capacity){
 
   const seriesFor = (site, sourceType) => entries.map(e=>{
     const item = (e.items||[]).find(it => it.capacity === capacity && it.site === site && it.source_type === sourceType);
-    return item ? item.price_krw : null;
+    return item ? exclVat(item.price_krw) : null;
   });
 
   const datasets = SOURCE_ORDER.map(s => ({
@@ -567,7 +669,7 @@ function renderSSDSourceTrendChart(history, sourceIndex){
 
   const seriesFor = (capacity) => entries.map(e=>{
     const item = (e.items||[]).find(it => it.capacity===capacity && it.site===s.site && it.source_type===s.source_type);
-    return item ? item.price_krw : null;
+    return item ? exclVat(item.price_krw) : null;
   });
 
   const datasets = sortedCaps.map(cap => ({
@@ -596,8 +698,9 @@ async function loadAndRenderSSD(){
     const {latest, history} = await loadDataset('ssd', false);
     window.__ssdLatest = latest;
     ssdHistory = history;
-    renderTimestamp(latest);
+    filterOptions('ssdTableCap',[...new Set((latest.items || []).map(it=>it.capacity))].sort((a,b)=>capacitySortKey(a)-capacitySortKey(b)));
     renderSSDTable(latest, history);
+    if(document.getElementById('tabpanel-ssd').classList.contains('active')) renderTimestamp(latest);
     populateSSDCapacitySelect(history);
     renderSSDTrendChart(history, document.getElementById('ssdCapacitySelect').value);
     populateSSDSourceSelect();
@@ -638,55 +741,51 @@ function ramComboOrderIndex(it){
 let ramHistory = null;
 let ramTrendChart = null;
 
+const RAM_CLOCK_SPEEDS = {'17000':2133,'19200':2400,'21300':2666,'23400':2933,'25600':3200};
+const RAM_CAPS = {RDIMM:['8GB','16GB','32GB','64GB'], EDIMM:['8GB','16GB','32GB']};
+const ramClockLabel = clock => RAM_CLOCK_SPEEDS[clock] ? `PC4-${clock} / ${RAM_CLOCK_SPEEDS[clock]} MT/s` : `PC4-${clock}`;
+const ramKey = row => [row.dimm_type,row.capacity,row.clock].join('|');
+
 function renderRAMTable(latest, history){
   const el = document.getElementById('ramTableArea');
-  const items = latest.items || [];
-  if(!items.length){ el.innerHTML = '<div class="empty">데이터가 없습니다.</div>'; return; }
-
-  const today = (history.entries && history.entries.length)
-    ? history.entries[history.entries.length-1].date : null;
-
-  const sorted = [...items].sort((a,b)=>{
-    const capDiff = capacitySortKey(a.capacity) - capacitySortKey(b.capacity);
-    if(capDiff !== 0) return capDiff;
-    return ramComboOrderIndex(a) - ramComboOrderIndex(b);
+  const today = latestDate(latest, history);
+  const byKey = new Map((latest.items || []).filter(it=>it.price_krw>0).map(it=>[ramKey(it),it]));
+  const specs = RAM_COMBO_ORDER.flatMap(combo=>RAM_CAPS[combo.dimm_type].map(capacity=>({...combo,capacity})));
+  for(const it of byKey.values()) if(!specs.some(spec=>ramKey(spec)===ramKey(it))) specs.push(it);
+  const matches = specs.filter(it=>
+    (!readFilter('ramTableType') || it.dimm_type===readFilter('ramTableType')) &&
+    (!readFilter('ramTableCap') || it.capacity===readFilter('ramTableCap')) &&
+    (!readFilter('ramTableClock') || it.clock===readFilter('ramTableClock')))
+    .sort((a,b)=>a.dimm_type.localeCompare(b.dimm_type) ||
+      capacitySortKey(a.capacity)-capacitySortKey(b.capacity) || ramComboOrderIndex(a)-ramComboOrderIndex(b));
+  const found = matches.filter(it=>byKey.has(ramKey(it))).length;
+  const shown = document.getElementById('ramShowMissing').checked || !found ? matches : matches.filter(it=>byKey.has(ramKey(it)));
+  const copies = [];
+  const rows = shown.map(spec=>{
+    const it = byKey.get(ramKey(spec));
+    const historyRows = previousPrices(history,today,x=>ramKey(x)===ramKey(spec));
+    const previous = historyRows[0];
+    const baseline = recentMedian(historyRows,today);
+    const diff = changePercent(it?.price_krw,previous?.item.price_krw);
+    const price = it ? exclVat(it.price_krw) : null;
+    const clock = ramClockLabel(spec.clock);
+    const detail = it ? `<details class="ram-baseline"><summary>시세 비교</summary><p>직전 단가 ${previous ? fmtWon(exclVat(previous.item.price_krw)) + ' · ' + escapeText(previous.date) : '—'}<br>최근 4주 중앙값 ${baseline == null ? '이력 부족' : fmtWon(exclVat(baseline)) + ' · ' + percentLabel(changePercent(it.price_krw,baseline))}</p></details>` : '—';
+    copies.push([spec.dimm_type,spec.capacity,clock,price,percentLabel(diff),it?.url || '',it?'확인':'미수집']);
+    return `<tr><td><span class="tag ${spec.dimm_type==='RDIMM'?'rdimm':'edimm'}">${escapeText(spec.dimm_type)}</span></td>
+      <td class="cap-cell">${escapeText(spec.capacity)}</td><td>${escapeText(clock)}</td>
+      <td>${it ? fmtWon(price)+anomalyBadge(it.price_krw,baseline) : '미수집'}</td>
+      <td>${changeCell(diff)}</td><td>${productLink(it?.url)}</td><td>${detail}</td></tr>`;
   });
-
-  const groups = [];
-  sorted.forEach(it=>{
-    const last = groups[groups.length-1];
-    if(last && last.capacity === it.capacity){ last.rows.push(it); }
-    else { groups.push({ capacity: it.capacity, rows: [it] }); }
+  rememberTable('ram',RAM_HEADERS,copies);
+  el.innerHTML = `<p class="table-note">확인 ${found}개 · 미수집 ${matches.length-found}개</p>` +
+    (rows.length ? `<div class="price-table-wrap"><table><thead><tr><th>타입</th><th>용량</th><th>클럭</th><th>${PRICE}</th><th>직전 수집 대비</th><th>상품</th><th>시세</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>
+    <p class="table-note">같은 타입·용량·클럭의 이력으로 비교합니다. EDIMM은 ECC Unbuffered입니다.</p>` :
+    '<div class="empty">조건에 해당하는 수집 대상 규격이 없습니다.</div>');
+}
+for(const id of ['ramTableType','ramTableCap','ramTableClock','ramShowMissing']){
+  document.getElementById(id).addEventListener('change',()=>{
+    if(window.__ramLatest && ramHistory) renderRAMTable(window.__ramLatest,ramHistory);
   });
-
-  const rows = groups.map(g=>{
-    return g.rows.map((it, i)=>{
-      const meta = ramComboMeta(it);
-      const tagClass = it.dimm_type === 'RDIMM' ? 'rdimm' : 'edimm';
-      const capCell = i===0 ? `<td class="cap-cell" rowspan="${g.rows.length}">${g.capacity}</td>` : '';
-      const { baseline, priorCount } = checkAnomaly(history, today, x =>
-        x.capacity === it.capacity && x.dimm_type === it.dimm_type && x.clock === it.clock
-      );
-      const badge = anomalyBadge(it.price_krw, baseline, priorCount);
-      const link = it.url ? `<a href="${it.url}" target="_blank" rel="noopener">바로가기 ↗</a>` : '-';
-      return `<tr>
-        ${capCell}
-        <td><span class="tag ${tagClass}">${meta.label}</span></td>
-        <td>${fmtWon(it.price_krw)}${badge}</td>
-        <td>${fmtWon(exclVat(it.price_krw))}</td>
-        <td class="link-cell">${link}</td>
-      </tr>`;
-    }).join('');
-  }).join('');
-
-  el.innerHTML = `
-    <table>
-      <thead><tr><th>용량</th><th>타입/클럭</th><th>가격(부가세포함)</th><th>가격(부가세별도, 추정)</th><th>상품</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <p class="table-note">※ 판매자마다 다르게 표기된 상품 중 삼성전자 최저가를 채택한 값입니다. 부가세별도는 계산 추정값입니다.</p>
-    <p class="table-note">⚠️ 배지는 최근 시세(중앙값) 대비 ±25% 이상 차이날 때 표시됩니다. 매칭 오류 가능성이 있으니 배지가 붙은 항목은 링크로 직접 확인해보시는 걸 권장합니다.</p>
-  `;
 }
 
 function populateRAMSelects(history){
@@ -705,7 +804,7 @@ function renderRAMTrendChart(history, capacity, dimmType){
   const combosForType = RAM_COMBO_ORDER.filter(c => c.dimm_type === dimmType);
   const seriesFor = (clock) => entries.map(e=>{
     const item = (e.items||[]).find(it => it.capacity === capacity && it.dimm_type === dimmType && it.clock === clock);
-    return item ? item.price_krw : null;
+    return item ? exclVat(item.price_krw) : null;
   });
 
   const datasets = combosForType.map(c => ({
@@ -734,7 +833,12 @@ async function loadAndRenderRAM(){
     const {latest, history} = await loadDataset('ram', false);
     window.__ramLatest = latest;
     ramHistory = history;
+    const caps = [...new Set([...Object.values(RAM_CAPS).flat(),...(latest.items || []).map(it=>it.capacity)])].sort((a,b)=>capacitySortKey(a)-capacitySortKey(b));
+    filterOptions('ramTableCap',caps,'32GB');
+    const clocks = [...new Set([...Object.keys(RAM_CLOCK_SPEEDS),...(latest.items || []).map(it=>it.clock)])].sort((a,b)=>Number(a)-Number(b));
+    filterOptions('ramTableClock',clocks.map(clock=>({id:clock,label:ramClockLabel(clock)})));
     renderRAMTable(latest, history);
+    if(document.getElementById('tabpanel-ram').classList.contains('active')) renderTimestamp(latest);
     populateRAMSelects(history);
     renderRAMTrendChart(history, document.getElementById('ramCapacitySelect').value, document.getElementById('ramDimmSelect').value);
   }catch(err){
@@ -803,7 +907,7 @@ const SECTION_META = {
   storage: { icon: '💾', title: 'SSD / 낸드플래시' },
 };
 
-function renderNews(latest){
+function renderNews(latest, priceDates = {}){
   const metaEl = document.getElementById('newsMetaArea');
   const areaEl = document.getElementById('newsArea');
 
@@ -813,10 +917,10 @@ function renderNews(latest){
     return;
   }
 
-  metaEl.innerHTML = `
-    출처: <a href="${latest.report_url}" target="_blank" rel="noopener">${latest.report_title} ↗</a>
-    · 수집 시각: ${latest.updated_at_display}
-  `;
+const priceLabel = Object.entries(priceDates).filter(([,date])=>date)
+    .map(([label,date])=>`${label} ${escapeText(date)}`).join(' / ');
+  metaEl.innerHTML = `발행호 ${productLink(latest.report_url,latest.report_title)}
+    · 리포트 수집 ${escapeText(latest.updated_at_display)}${priceLabel ? ` · 국내 단가 확인일 ${priceLabel}` : ''}`;
 
   const sections = latest.sections || {};
   const html = Object.keys(SECTION_META).map(key=>{
@@ -826,7 +930,7 @@ function renderNews(latest){
     return `
       <div class="news-section">
         <h3>${meta.icon} ${meta.title}</h3>
-        <ul>${bullets.map(b=>`<li>${b}</li>`).join('')}</ul>
+        <ul>${bullets.slice(0,3).map(b=>`<li>${escapeText(b)}</li>`).join('')}</ul>
       </div>
     `;
   }).join('');
@@ -841,6 +945,15 @@ async function loadAndRenderNews(){
     const latest = await res.json();
     window.__newsLatest = latest;
     renderNews(latest);
+    const [ssd,ram] = await Promise.all([['ssd',window.__ssdLatest],['ram',window.__ramLatest]].map(async ([key,cached])=>{
+      if(cached?.updated_at_display) return cached.updated_at_display.slice(0,10);
+      try{
+        const response = await fetch(`data/${key}/latest.json`);
+        if(response.ok) return (await response.json()).updated_at_display?.slice(0,10);
+      }catch{}
+      return null;
+    }));
+    renderNews(latest,{SSD:ssd,RAM:ram});
     if(document.getElementById('tabpanel-news').classList.contains('active')) renderTimestamp(latest);
   }catch(err){
     document.getElementById('newsArea').innerHTML = `<div class="error">데이터를 불러오지 못했습니다: ${err.message}</div>`;
@@ -914,23 +1027,57 @@ function parseFile(file, cb){
   }
 }
 
+const uploadFiles = {};
+const uploadIds = new WeakMap();
+
+function fileId(file){
+  if(!file || !globalThis.crypto?.subtle) return Promise.resolve(null);
+  if(!uploadIds.has(file)){
+    uploadIds.set(file,file.arrayBuffer().then(buffer=>crypto.subtle.digest('SHA-256',buffer)).then(hash=>
+      Array.from(new Uint8Array(hash),byte=>byte.toString(16).padStart(2,'0')).join('')).catch(()=>null));
+  }
+  return uploadIds.get(file);
+}
+
+function saveMapping(id, selects){
+  const map = Object.fromEntries(Object.entries(selects).map(([key,select])=>[key,select.value]));
+  try{localStorage.setItem('inventory-column-map:'+id,JSON.stringify(map));}catch{}
+}
+
+async function addInventoryRows(rows, file, currentRows, history, update){
+  const id = await fileId(file);
+  if(rows !== currentRows()) return;
+  const existing = history();
+  if(id && existing.some(row=>row.importId===id)){
+    update('이미 추가한 파일입니다');
+    return;
+  }
+  const today = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date());
+  const tagged = rows.map(row=>({...row,date:row.date || today,...(id ? {importId:id} : {})}));
+  for(const row of tagged) existing.push(row);
+  update(`히스토리에 ${tagged.length}건 추가됨`);
+}
+
 function buildMapUI(container, fields, spec){
   container.innerHTML = '';
   container.style.display = 'grid';
   const selects = {};
+  let saved = {};
+  try{saved = JSON.parse(localStorage.getItem('inventory-column-map:'+container.id)) || {};}catch{}
   spec.forEach(f=>{
     const div = document.createElement('div');
     div.className = 'mapfield' + (f.optional ? ' optional' : '');
     const label = document.createElement('label');
     label.textContent = f.label;
     const sel = document.createElement('select');
+    const chosen = fields.includes(saved[f.key]) || (f.optional && saved[f.key] === '') ? saved[f.key] : f.guess;
     const noneOpt = document.createElement('option');
     noneOpt.value=''; noneOpt.textContent = f.optional ? '(사용 안 함)' : '선택하세요';
     sel.appendChild(noneOpt);
     fields.forEach(col=>{
       const opt = document.createElement('option');
       opt.value = col; opt.textContent = col;
-      if(col === f.guess) opt.selected = true;
+      if(col === chosen) opt.selected = true;
       sel.appendChild(opt);
     });
     div.appendChild(label); div.appendChild(sel);
@@ -1112,8 +1259,12 @@ document.getElementById('serverDrop').addEventListener('click', ()=> document.ge
 document.getElementById('serverFile').addEventListener('change', e=>{
   const file = e.target.files[0];
   if(!file) return;
+  uploadFiles.server = file;
+  window.serverCurrentRows = null;
+  document.getElementById('serverGenerate').disabled = true;
   document.getElementById('serverFname').textContent = '선택됨: ' + file.name;
   parseFile(file, (data, fields)=>{
+    if(uploadFiles.server !== file) return;
     serverData = data; serverFields = fields;
     const spec = [
       {key:'product', label:'제품명', guess: guessColumn(fields, ['제품명','모델명','품명'])},
@@ -1188,6 +1339,7 @@ document.getElementById('serverGenerate').addEventListener('click', ()=>{
     date: dateCol ? normalizeDate(row[dateCol]) : null,
   })).filter(r=>r.product);
 
+  saveMapping('serverMap', sel);
   window.serverCurrentRows = rows;
   document.getElementById('serverHistoryBox').style.display = 'block';
   renderServerFromRows(rows, serverEntrySet, `현재 업로드 파일 (${rows.length}건)`);
@@ -1199,14 +1351,9 @@ function updateServerHistoryStatus(sourceLabel){
 }
 
 document.getElementById('serverAddHistory').addEventListener('click', ()=>{
-  if(!window.serverCurrentRows || !window.serverCurrentRows.length){
-    alert('먼저 표·그래프를 생성한 뒤 추가해주세요.'); return;
-  }
-  const today = new Date().toISOString().slice(0,10);
-  const tagged = window.serverCurrentRows.map(r=> ({...r, date: r.date || today}));
-  serverHistory = serverHistory.concat(tagged);
-  updateServerHistoryStatus(`히스토리에 ${tagged.length}건 추가됨`);
-  alert(`히스토리에 ${tagged.length}건을 추가했습니다. (날짜 미지정 행은 오늘 날짜로 기록) 현재 총 ${serverHistory.length}건`);
+  const rows = window.serverCurrentRows;
+  if(!rows?.length){ alert('먼저 표·그래프를 생성한 뒤 추가해주세요.'); return; }
+  addInventoryRows(rows,uploadFiles.server,()=>window.serverCurrentRows,()=>serverHistory,updateServerHistoryStatus);
 });
 
 document.getElementById('serverApplyFilter').addEventListener('click', ()=>{
@@ -1260,6 +1407,8 @@ document.getElementById('serverImportHistory').addEventListener('change', e=>{
 });
 
 document.getElementById('serverReset').addEventListener('click', ()=>{
+  uploadFiles.server = null;
+  window.serverCurrentRows = null;
   document.getElementById('serverOutput').innerHTML='';
   document.getElementById('serverMap').style.display='none';
   document.getElementById('serverMap').innerHTML='';
@@ -1292,13 +1441,18 @@ function renderServerOutput(names, agg, outArr, inArr, netArr, ratioArr){
         <canvas id="serverChart3" height="90"></canvas>
       </div>
     </div>
-    <table class="datatable">
+    <button type="button" class="ghost small" id="serverCopySummary">요약표 복사</button>
+    <output class="price-copy-status" id="serverCopyStatus" aria-live="polite"></output>
+    <div class="price-table-wrap"><table class="datatable">
       <thead><tr><th>제품명</th><th>LEVEL</th><th>출고</th><th>재입고</th><th>순출고량</th><th>출고비율</th></tr></thead>
       <tbody>
-        ${names.map((n,i)=>`<tr><td>${n}</td><td>${agg[n].level}</td><td class="num">${outArr[i]}</td><td class="num">${inArr[i]}</td><td class="num">${netArr[i]}</td><td class="num">${(ratioArr[i]*100).toFixed(1)}%</td></tr>`).join('')}
+        ${names.map((n,i)=>`<tr><td>${escapeText(n)}</td><td>${escapeText(agg[n].level)}</td><td class="num">${outArr[i]}</td><td class="num">${inArr[i]}</td><td class="num">${netArr[i]}</td><td class="num">${(ratioArr[i]*100).toFixed(1)}%</td></tr>`).join('')}
       </tbody>
-    </table>
+    </table></div>
   `;
+  document.getElementById('serverCopySummary').addEventListener('click',()=>copyReport(
+    [['제품명','LEVEL','출고','재입고','순출고량','출고비율'],...names.map((n,i)=>[n,agg[n].level,outArr[i],inArr[i],netArr[i],`${(ratioArr[i]*100).toFixed(1)}%`])],
+    'serverCopyStatus'));
 
   const levelGroups = computeLevelGroups(names, agg);
 
@@ -1374,8 +1528,12 @@ document.getElementById('secDrop').addEventListener('click', ()=> document.getEl
 document.getElementById('secFile').addEventListener('change', e=>{
   const file = e.target.files[0];
   if(!file) return;
+  uploadFiles.sec = file;
+  window.secCurrentRows = null;
+  document.getElementById('secGenerate').disabled = true;
   document.getElementById('secFname').textContent = '선택됨: ' + file.name;
   parseFile(file, (data, fields)=>{
+    if(uploadFiles.sec !== file) return;
     secData = data; secFields = fields;
     const spec = [
       {key:'product', label:'모델명', guess: guessColumn(fields, ['모델명','제품명'])},
@@ -1422,6 +1580,7 @@ document.getElementById('secGenerate').addEventListener('click', ()=>{
     date: dateCol ? normalizeDate(row[dateCol]) : null,
   })).filter(r=>r.product);
 
+  saveMapping('secMap', sel);
   window.secCurrentRows = rows;
   document.getElementById('secHistoryBox').style.display = 'block';
   renderSecFromRows(rows, `현재 업로드 파일 (${rows.length}건)`);
@@ -1433,14 +1592,9 @@ function updateSecHistoryStatus(sourceLabel){
 }
 
 document.getElementById('secAddHistory').addEventListener('click', ()=>{
-  if(!window.secCurrentRows || !window.secCurrentRows.length){
-    alert('먼저 표·그래프를 생성한 뒤 추가해주세요.'); return;
-  }
-  const today = new Date().toISOString().slice(0,10);
-  const tagged = window.secCurrentRows.map(r=> ({...r, date: r.date || today}));
-  secHistory = secHistory.concat(tagged);
-  updateSecHistoryStatus(`히스토리에 ${tagged.length}건 추가됨`);
-  alert(`히스토리에 ${tagged.length}건을 추가했습니다. 현재 총 ${secHistory.length}건`);
+  const rows = window.secCurrentRows;
+  if(!rows?.length){ alert('먼저 표·그래프를 생성한 뒤 추가해주세요.'); return; }
+  addInventoryRows(rows,uploadFiles.sec,()=>window.secCurrentRows,()=>secHistory,updateSecHistoryStatus);
 });
 
 document.getElementById('secApplyFilter').addEventListener('click', ()=>{
@@ -1494,6 +1648,8 @@ document.getElementById('secImportHistory').addEventListener('change', e=>{
 });
 
 document.getElementById('secReset').addEventListener('click', ()=>{
+  uploadFiles.sec = null;
+  window.secCurrentRows = null;
   document.getElementById('secOutput').innerHTML='';
   document.getElementById('secMap').style.display='none';
   document.getElementById('secMap').innerHTML='';
@@ -1520,14 +1676,19 @@ function renderSecOutput(names, qtyArr, total){
         <canvas id="secChart2"></canvas>
       </div>
     </div>
-    <table class="datatable">
+    <button type="button" class="ghost small" id="secCopySummary">요약표 복사</button>
+    <output class="price-copy-status" id="secCopyStatus" aria-live="polite"></output>
+    <div class="price-table-wrap"><table class="datatable">
       <thead><tr><th>모델명</th><th>수량</th><th>비율</th></tr></thead>
       <tbody>
-        ${names.map((n,i)=>`<tr><td>${n}</td><td class="num">${qtyArr[i]}</td><td class="num">${(qtyArr[i]/total*100).toFixed(1)}%</td></tr>`).join('')}
+        ${names.map((n,i)=>`<tr><td>${escapeText(n)}</td><td class="num">${qtyArr[i]}</td><td class="num">${(qtyArr[i]/total*100).toFixed(1)}%</td></tr>`).join('')}
         <tr><td><strong>총합계</strong></td><td class="num"><strong>${total}</strong></td><td></td></tr>
       </tbody>
-    </table>
+    </table></div>
   `;
+  document.getElementById('secCopySummary').addEventListener('click',()=>copyReport(
+    [['모델명','수량','비율'],...names.map((n,i)=>[n,qtyArr[i],`${(qtyArr[i]/total*100).toFixed(1)}%`]),['총합계',total,'']],
+    'secCopyStatus'));
 
   const c1 = new Chart(document.getElementById('secChart1'), {
     type:'bar',
@@ -1570,6 +1731,31 @@ function renderSecOutput(names, qtyArr, total){
       const map = {q1:'secChart1', q2:'secChart2'};
       savePNG(document.getElementById(map[btn.dataset.c]), map[btn.dataset.c]+'.png');
     });
+  });
+}
+
+for(const kind of ['server','sec']){
+  const select = document.getElementById(kind+'Quarter');
+  const now = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date());
+  const [year, month] = now.split('-').map(Number);
+  const current = year*4+Math.floor((month-1)/3);
+  for(let offset=0; offset<8; offset++){
+    const index = current-offset;
+    const y = Math.floor(index/4), q = index%4+1;
+    select.add(new Option(`${y}년 ${q}분기`,`${y}-${q}`));
+  }
+  const from = document.getElementById(kind+'DateFrom');
+  const to = document.getElementById(kind+'DateTo');
+  from.addEventListener('change',()=>{select.value='';});
+  to.addEventListener('change',()=>{select.value='';});
+  document.getElementById(kind+'ClearFilter').addEventListener('click',()=>{select.value='';});
+  select.addEventListener('change',()=>{
+    if(!select.value) return;
+    const [year, quarter] = select.value.split('-').map(Number);
+    const startMonth = (quarter-1)*3;
+    from.value = new Date(Date.UTC(year,startMonth,1)).toISOString().slice(0,10);
+    to.value = new Date(Date.UTC(year,startMonth+3,0)).toISOString().slice(0,10);
+    document.getElementById(kind+'ApplyFilter').click();
   });
 }
 
