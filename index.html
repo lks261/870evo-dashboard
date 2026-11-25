@@ -61,10 +61,24 @@
   .stale-price{display:inline-block;margin-left:6px;background:#fff1e1;color:#884614}
   .best-price{display:inline-block;margin-left:6px;background:#e8f4ec;color:#276146}
   .price-tools details{color:var(--ink-soft);font-size:12px}
+  .capacity-filter{position:relative}
+  .capacity-filter summary{cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--paper);color:var(--teal-900)}
+  .capacity-filter-options{position:absolute;z-index:2;left:0;top:calc(100% + 4px);min-width:130px;padding:7px;background:var(--paper);border:1px solid var(--line);border-radius:8px;box-shadow:0 5px 15px #12384020}
+  .capacity-filter-options label{display:flex;align-items:center;gap:6px;padding:4px 6px;cursor:pointer;white-space:nowrap}
+  .capacity-filter-options label:hover{background:var(--teal-100)}
   #tsBox details summary,.ram-baseline summary{cursor:pointer}
   #tsBox details{color:#884614}
   .ram-baseline{margin-top:12px}
   .ram-baseline p{margin:7px 0 0}
+  .chart-range{display:grid;gap:8px;margin:0 0 13px}
+  .chart-range-row{display:flex;align-items:center;flex-wrap:wrap;gap:7px;color:var(--ink-soft);font-size:12px}
+  .chart-range-label{font-weight:700;margin-right:4px}
+  .chart-range input{font:inherit;color:var(--ink);border:1px solid var(--line);border-radius:7px;padding:5px 7px}
+  .chart-range button[aria-pressed="true"]{background:var(--teal-900);border-color:var(--teal-900);color:#fff}
+  .chart-range-error{color:#a83224;font-size:12px}
+  .chart-range-error:empty{display:none}
+  .chart-empty{margin:0}
+  .chart-empty[hidden],canvas[hidden]{display:none!important}
   .chart-controls{ display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
   .chart-controls label{ font-size:12px; color:var(--ink-soft); font-weight:600; }
   .chart-controls select{
@@ -204,7 +218,10 @@
     <div class="card">
       <h2>최신 용량별 단가</h2>
       <div class="chart-controls price-tools">
-        <label>용량 <select id="ssdTableCap"><option value="">전체</option></select></label>
+        <details class="capacity-filter" id="ssdTableCap">
+          <summary>용량: 전체</summary>
+          <div class="capacity-filter-options" role="group" aria-label="용량 선택"></div>
+        </details>
         <label>구분 <select id="ssdTableType"><option value="">전체</option><option>정품</option><option>병행수입</option></select></label>
         <button type="button" class="ghost small" id="ssdCopyTable" disabled>표 복사</button>
       </div>
@@ -218,6 +235,22 @@
         <label>용량</label>
         <select id="ssdCapacitySelect"></select>
       </div>
+      <form id="ssdChartRange" class="chart-range" aria-label="SSD 차트 조회 기간" novalidate>
+        <div class="chart-range-row" role="group" aria-label="빠른 기간 선택">
+          <span class="chart-range-label">조회 기간</span>
+          <button type="button" class="ghost small" data-range="1m" aria-pressed="false">1개월</button>
+          <button type="button" class="ghost small" data-range="3m" aria-pressed="false">최근 3개월</button>
+          <button type="button" class="ghost small" data-range="quarter" aria-pressed="false">이번 분기</button>
+          <button type="button" class="ghost small" data-range="all" aria-pressed="true">전체</button>
+        </div>
+        <div class="chart-range-row">
+          <label>시작일 <input type="date" name="from"></label>
+          <label>종료일 <input type="date" name="to"></label>
+          <button type="submit" class="ghost small">적용</button>
+        </div>
+        <output class="chart-range-error" aria-live="polite"></output>
+      </form>
+      <p id="ssdTrendChartEmpty" class="empty chart-empty" role="status" hidden>이 기간에 표시할 가격 기록이 없습니다.</p>
       <canvas id="ssdTrendChart"></canvas>
     </div>
 
@@ -227,6 +260,8 @@
         <label>구분</label>
         <select id="ssdSourceSelect"></select>
       </div>
+      <p class="table-note" id="ssdSourceChartPeriod"></p>
+      <p id="ssdSourceTrendChartEmpty" class="empty chart-empty" role="status" hidden>이 기간에 표시할 가격 기록이 없습니다.</p>
       <canvas id="ssdSourceTrendChart"></canvas>
     </div>
   </div>
@@ -237,7 +272,10 @@
       <h2>최신 용량별 단가 — 삼성전자 서버용 DDR4</h2>
       <div class="chart-controls price-tools">
         <label>타입 <select id="ramTableType"><option value="">전체</option><option>RDIMM</option><option>EDIMM</option></select></label>
-        <label>용량 <select id="ramTableCap"><option value="">전체</option></select></label>
+        <details class="capacity-filter" id="ramTableCap">
+          <summary>용량: 전체</summary>
+          <div class="capacity-filter-options" role="group" aria-label="용량 선택"></div>
+        </details>
         <label>클럭 <select id="ramTableClock"><option value="">전체</option></select></label>
         <label><input type="checkbox" id="ramShowMissing"> 미수집 규격 표시</label>
         <button type="button" class="ghost small" id="ramCopyTable" disabled>표 복사</button>
@@ -257,6 +295,22 @@
           <option value="EDIMM">EDIMM (Unbuffered)</option>
         </select>
       </div>
+      <form id="ramChartRange" class="chart-range" aria-label="RAM 차트 조회 기간" novalidate>
+        <div class="chart-range-row" role="group" aria-label="빠른 기간 선택">
+          <span class="chart-range-label">조회 기간</span>
+          <button type="button" class="ghost small" data-range="1m" aria-pressed="false">1개월</button>
+          <button type="button" class="ghost small" data-range="3m" aria-pressed="false">최근 3개월</button>
+          <button type="button" class="ghost small" data-range="quarter" aria-pressed="false">이번 분기</button>
+          <button type="button" class="ghost small" data-range="all" aria-pressed="true">전체</button>
+        </div>
+        <div class="chart-range-row">
+          <label>시작일 <input type="date" name="from"></label>
+          <label>종료일 <input type="date" name="to"></label>
+          <button type="submit" class="ghost small">적용</button>
+        </div>
+        <output class="chart-range-error" aria-live="polite"></output>
+      </form>
+      <p id="ramTrendChartEmpty" class="empty chart-empty" role="status" hidden>이 기간에 표시할 가격 기록이 없습니다.</p>
       <canvas id="ramTrendChart"></canvas>
     </div>
   </div>
@@ -448,6 +502,52 @@ function filterOptions(id, values, selected=''){
   if([...select.options].some(o=>o.value===selected)) select.value = selected;
 }
 
+function selectedCapacities(id){
+  return new Set([...document.getElementById(id).querySelectorAll('input[data-capacity]:checked')]
+    .map(input=>input.value));
+}
+
+function setupCapacityFilter(id, values, initial=[]){
+  const root = document.getElementById(id);
+  const summary = root.querySelector('summary');
+  const menu = root.querySelector('.capacity-filter-options');
+  menu.replaceChildren();
+  const all = document.createElement('input');
+  all.type = 'checkbox';
+  function addChoice(input, text){
+    const label = document.createElement('label');
+    label.append(input,document.createTextNode(text));
+    menu.append(label);
+  }
+  addChoice(all,'전체');
+  for(const value of values){
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.value = value;
+    input.dataset.capacity = '';
+    input.checked = initial.includes(value);
+    addChoice(input,value);
+  }
+  function update(){
+    const values = [...selectedCapacities(id)];
+    all.checked = values.length === 0;
+    summary.textContent = '용량: ' + (values.length===0 ? '전체' : values.length<=2 ? values.join(', ') : values.length+'개 선택');
+  }
+  menu.onchange = event=>{
+    if(event.target===all){
+      for(const input of menu.querySelectorAll('input[data-capacity]')) input.checked = false;
+    }
+    update();
+  };
+  root.onkeydown = event=>{
+    if(event.key==='Escape' && root.open){
+      root.open=false;
+      summary.focus();
+    }
+  };
+  update();
+}
+
 async function copyReport(rows, statusId){
   const normalize = value => {
     const text = String(value ?? '').replace(/[\t\r\n]+/g,' ');
@@ -566,16 +666,22 @@ function renderSSDTable(latest, history){
       .map(entry=>entry.date).sort().at(-1);
     if(last && last < today) ssdStaleSites.set(site,last);
   }
-  const items = (latest.items || []).filter(it=>
-    (!readFilter('ssdTableCap') || it.capacity===readFilter('ssdTableCap')) &&
+  const allItems = latest.items || [];
+  const candidates = new Map();
+  for(const item of allItems){
+    const source = SOURCE_ORDER.findIndex(source=>source.site===item.site && source.source_type===item.source_type);
+    if(source < 0 || ssdStaleSites.has(item.site) || !Number.isFinite(item.price_krw) || item.price_krw<=0) continue;
+    if(!candidates.has(item.capacity)) candidates.set(item.capacity,new Map());
+    const prices = candidates.get(item.capacity);
+    prices.set(source,Math.min(prices.get(source) ?? Infinity,item.price_krw));
+  }
+  const minimums = new Map([...candidates].filter(([,prices])=>prices.size>=2)
+    .map(([capacity,prices])=>[capacity,Math.min(...prices.values())]));
+  const capacities = selectedCapacities('ssdTableCap');
+  const items = allItems.filter(it=>
+    (!capacities.size || capacities.has(it.capacity)) &&
     (!readFilter('ssdTableType') || it.source_type===readFilter('ssdTableType')))
     .sort((a,b)=>capacitySortKey(a.capacity)-capacitySortKey(b.capacity) || sourceOrderIndex(a)-sourceOrderIndex(b));
-  const minimums = new Map();
-  for(const it of items){
-    if(it.source_type==='정품' && !ssdStaleSites.has(it.site) && it.price_krw>0){
-      minimums.set(it.capacity,Math.min(minimums.get(it.capacity) ?? Infinity,it.price_krw));
-    }
-  }
   const copies = [];
   const rows = items.map(it=>{
     const meta = sourceMeta(it);
@@ -584,18 +690,18 @@ function renderSSDTable(latest, history){
     const historyRows = previousPrices(history, stale || today, x=>
       x.capacity===it.capacity && x.site===it.site && x.source_type===it.source_type);
     const diff = stale ? null : changePercent(it.price_krw,historyRows[0]?.item.price_krw);
-    const best = !stale && it.source_type==='정품' && minimums.get(it.capacity)===it.price_krw;
+    const best = !stale && sourceOrderIndex(it)<SOURCE_ORDER.length && minimums.get(it.capacity)===it.price_krw;
     const status = stale ? `이전 수집값 (${stale})` : '확인';
     const price = exclVat(it.price_krw);
     copies.push([it.capacity,source,price,percentLabel(diff),it.url || '',status]);
     return `<tr><td class="cap-cell">${escapeText(it.capacity)}</td>
       <td><span class="tag ${meta.tagClass}">${escapeText(source)}</span>${stale?'<span class="tag stale-price">이전 수집값</span>':''}</td>
-      <td>${fmtWon(price)}${best?'<span class="tag best-price">정품 최저</span>':''}${stale?'':anomalyBadge(it.price_krw,recentMedian(historyRows,today))}</td>
+      <td>${fmtWon(price)}${best?'<span class="tag best-price">수집가 최저</span>':''}${stale?'':anomalyBadge(it.price_krw,recentMedian(historyRows,today))}</td>
       <td>${changeCell(diff)}</td><td class="link-cell">${productLink(it.url)}</td></tr>`;
   });
   rememberTable('ssd',SSD_HEADERS,copies);
   el.innerHTML = rows.length ? `<div class="price-table-wrap"><table><thead><tr><th>용량</th><th>구분</th><th>${PRICE}</th><th>직전 수집 대비</th><th>상품</th></tr></thead><tbody>${rows.join('')}</tbody></table></div>
-    <p class="table-note">같은 용량의 최신 정품끼리 비교합니다. 시세 배지는 최근 4주 중앙값 대비 ±25% 이상일 때 표시됩니다.</p>` :
+    <p class="table-note">수집가 최저는 같은 용량의 다나와 정품·병행수입, 컴퓨존 정품 중 최신 가격이 2개 이상일 때 표시합니다. 컴퓨존은 공개 판매가 기준입니다. 딜러 혜택가는 상품 링크에서 확인하세요.</p>` :
     '<div class="empty">조건에 맞는 가격이 없습니다.</div>';
 }
 for(const id of ['ssdTableCap','ssdTableType']){
@@ -613,8 +719,83 @@ function populateSSDCapacitySelect(history){
   if(sortedCaps.includes('1TB')) select.value = '1TB';
 }
 
+const chartRanges = {ssd:{from:'',to:''},ram:{from:'',to:''}};
+
+function monthStartOffset(isoDate, months){
+  const [year, month, day] = isoDate.split('-').map(Number);
+  const lastDay = new Date(Date.UTC(year,month-months,0)).getUTCDate();
+  return new Date(Date.UTC(year,month-1-months,Math.min(day,lastDay))).toISOString().slice(0,10);
+}
+
+function presetChartRange(period, today){
+  if(period==='all') return {from:'',to:''};
+  const [year, month] = today.split('-');
+  const from = period==='quarter' ? year+'-'+String(Math.floor((Number(month)-1)/3)*3+1).padStart(2,'0')+'-01'
+    : monthStartOffset(today,period==='1m'?1:3);
+  return {from,to:today};
+}
+
+function filteredChartEntries(history, key){
+  const {from,to} = chartRanges[key];
+  return (history.entries || []).filter(entry=>(!from || entry.date>=from) && (!to || entry.date<=to))
+    .sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+function bindChartRange(key, redraw){
+  const form = document.getElementById(key+'ChartRange');
+  const from = form.elements.namedItem('from');
+  const to = form.elements.namedItem('to');
+  const buttons = [...form.querySelectorAll('[data-range]')];
+  const error = form.querySelector('output');
+  function apply(range, preset){
+    if(from.validity.badInput || to.validity.badInput || (range.from && range.to && range.from>range.to)){
+      error.textContent = '시작일과 종료일을 확인해 주세요.';
+      return;
+    }
+    chartRanges[key] = range;
+    error.textContent = '';
+    for(const button of buttons) button.setAttribute('aria-pressed',String(button.dataset.range===preset));
+    if(key==='ssd'){
+      document.getElementById('ssdSourceChartPeriod').textContent = range.from || range.to
+        ? '조회 기간 '+(range.from || '처음')+' ~ '+(range.to || '최신')+' · 위 SSD 차트와 동일' : '';
+    }
+    redraw();
+  }
+  for(const button of buttons){
+    button.addEventListener('click',()=>{
+      const today = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Seoul'}).format(new Date());
+      const range = presetChartRange(button.dataset.range,today);
+      from.value=range.from;
+      to.value=range.to;
+      apply(range,button.dataset.range);
+    });
+  }
+  form.addEventListener('submit',event=>{
+    event.preventDefault();
+    apply({from:from.value,to:to.value},'');
+  });
+}
+
+function drawPriceChart(id, previousChart, dates, datasets){
+  previousChart?.destroy();
+  const canvas = document.getElementById(id);
+  const empty = !datasets.some(series=>series.data.some(Number.isFinite));
+  canvas.hidden = empty;
+  document.getElementById(id+'Empty').hidden = !empty;
+  if(empty) return null;
+  return new Chart(canvas, {
+    type:'line',
+    data:{labels:dates,datasets},
+    options:{
+      responsive:true,
+      plugins:{legend:{position:'bottom'}},
+      scales:{y:{ticks:{callback:value=>fmtWon(value)}}}
+    }
+  });
+}
+
 function renderSSDTrendChart(history, capacity){
-  const entries = (history.entries || []).slice().sort((a,b)=> a.date.localeCompare(b.date));
+  const entries = filteredChartEntries(history,'ssd');
   const dates = entries.map(e=>e.date);
 
   const seriesFor = (site, sourceType) => entries.map(e=>{
@@ -631,16 +812,7 @@ function renderSSDTrendChart(history, capacity){
     tension: 0.25,
   }));
 
-  if(ssdTrendChart) ssdTrendChart.destroy();
-  ssdTrendChart = new Chart(document.getElementById('ssdTrendChart'), {
-    type: 'line',
-    data: { labels: dates, datasets },
-    options: {
-      responsive: true,
-      plugins: { legend: { position:'bottom' } },
-      scales: { y: { ticks: { callback: v => v.toLocaleString('ko-KR') + '원' } } }
-    }
-  });
+  ssdTrendChart = drawPriceChart('ssdTrendChart',ssdTrendChart,dates,datasets);
 }
 
 let ssdSourceTrendChart = null;
@@ -658,7 +830,7 @@ function populateSSDSourceSelect(){
 
 function renderSSDSourceTrendChart(history, sourceIndex){
   const s = SOURCE_ORDER[sourceIndex];
-  const entries = (history.entries || []).slice().sort((a,b)=> a.date.localeCompare(b.date));
+  const entries = filteredChartEntries(history,'ssd');
   const dates = entries.map(e=>e.date);
 
   const caps = new Set();
@@ -681,16 +853,7 @@ function renderSSDSourceTrendChart(history, sourceIndex){
     tension: 0.25,
   }));
 
-  if(ssdSourceTrendChart) ssdSourceTrendChart.destroy();
-  ssdSourceTrendChart = new Chart(document.getElementById('ssdSourceTrendChart'), {
-    type: 'line',
-    data: { labels: dates, datasets },
-    options: {
-      responsive: true,
-      plugins: { legend: { position:'bottom' } },
-      scales: { y: { ticks: { callback: v => v.toLocaleString('ko-KR') + '원' } } }
-    }
-  });
+  ssdSourceTrendChart = drawPriceChart('ssdSourceTrendChart',ssdSourceTrendChart,dates,datasets);
 }
 
 async function loadAndRenderSSD(){
@@ -698,7 +861,7 @@ async function loadAndRenderSSD(){
     const {latest, history} = await loadDataset('ssd', false);
     window.__ssdLatest = latest;
     ssdHistory = history;
-    filterOptions('ssdTableCap',[...new Set((latest.items || []).map(it=>it.capacity))].sort((a,b)=>capacitySortKey(a)-capacitySortKey(b)));
+    setupCapacityFilter('ssdTableCap',[...new Set((latest.items || []).map(it=>it.capacity))].sort((a,b)=>capacitySortKey(a)-capacitySortKey(b)));
     renderSSDTable(latest, history);
     if(document.getElementById('tabpanel-ssd').classList.contains('active')) renderTimestamp(latest);
     populateSSDCapacitySelect(history);
@@ -752,9 +915,10 @@ function renderRAMTable(latest, history){
   const byKey = new Map((latest.items || []).filter(it=>it.price_krw>0).map(it=>[ramKey(it),it]));
   const specs = RAM_COMBO_ORDER.flatMap(combo=>RAM_CAPS[combo.dimm_type].map(capacity=>({...combo,capacity})));
   for(const it of byKey.values()) if(!specs.some(spec=>ramKey(spec)===ramKey(it))) specs.push(it);
+  const capacities = selectedCapacities('ramTableCap');
   const matches = specs.filter(it=>
     (!readFilter('ramTableType') || it.dimm_type===readFilter('ramTableType')) &&
-    (!readFilter('ramTableCap') || it.capacity===readFilter('ramTableCap')) &&
+    (!capacities.size || capacities.has(it.capacity)) &&
     (!readFilter('ramTableClock') || it.clock===readFilter('ramTableClock')))
     .sort((a,b)=>a.dimm_type.localeCompare(b.dimm_type) ||
       capacitySortKey(a.capacity)-capacitySortKey(b.capacity) || ramComboOrderIndex(a)-ramComboOrderIndex(b));
@@ -798,7 +962,7 @@ function populateRAMSelects(history){
 }
 
 function renderRAMTrendChart(history, capacity, dimmType){
-  const entries = (history.entries || []).slice().sort((a,b)=> a.date.localeCompare(b.date));
+  const entries = filteredChartEntries(history,'ram');
   const dates = entries.map(e=>e.date);
 
   const combosForType = RAM_COMBO_ORDER.filter(c => c.dimm_type === dimmType);
@@ -816,16 +980,7 @@ function renderRAMTrendChart(history, capacity, dimmType){
     tension: 0.25,
   }));
 
-  if(ramTrendChart) ramTrendChart.destroy();
-  ramTrendChart = new Chart(document.getElementById('ramTrendChart'), {
-    type: 'line',
-    data: { labels: dates, datasets },
-    options: {
-      responsive: true,
-      plugins: { legend: { position:'bottom' } },
-      scales: { y: { ticks: { callback: v => v.toLocaleString('ko-KR') + '원' } } }
-    }
-  });
+  ramTrendChart = drawPriceChart('ramTrendChart',ramTrendChart,dates,datasets);
 }
 
 async function loadAndRenderRAM(){
@@ -834,7 +989,7 @@ async function loadAndRenderRAM(){
     window.__ramLatest = latest;
     ramHistory = history;
     const caps = [...new Set([...Object.values(RAM_CAPS).flat(),...(latest.items || []).map(it=>it.capacity)])].sort((a,b)=>capacitySortKey(a)-capacitySortKey(b));
-    filterOptions('ramTableCap',caps,'32GB');
+    setupCapacityFilter('ramTableCap',caps,['32GB']);
     const clocks = [...new Set([...Object.keys(RAM_CLOCK_SPEEDS),...(latest.items || []).map(it=>it.clock)])].sort((a,b)=>Number(a)-Number(b));
     filterOptions('ramTableClock',clocks.map(clock=>({id:clock,label:ramClockLabel(clock)})));
     renderRAMTable(latest, history);
@@ -960,6 +1115,14 @@ async function loadAndRenderNews(){
   }
 }
 
+bindChartRange('ssd',()=>{
+  if(!ssdHistory) return;
+  renderSSDTrendChart(ssdHistory,readFilter('ssdCapacitySelect'));
+  renderSSDSourceTrendChart(ssdHistory,readFilter('ssdSourceSelect'));
+});
+bindChartRange('ram',()=>{
+  if(ramHistory) renderRAMTrendChart(ramHistory,readFilter('ramCapacitySelect'),readFilter('ramDimmSelect'));
+});
 loadAndRenderSSD();
 </script>
 
@@ -1775,5 +1938,6 @@ for(const kind of ['server','sec']){
 });
 
 </script>
+<script src="./compuzone-dealer.js" defer></script>
 </body>
 </html>
