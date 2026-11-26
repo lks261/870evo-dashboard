@@ -6,9 +6,9 @@
   card.id = "compuzone-dealer-price";
   card.style.cssText = "margin:12px 0;padding:12px;border:1px solid #d9e3e7;border-radius:12px";
   const title = document.createElement("strong");
-  title.textContent = "컴퓨존 870 EVO 2TB";
-  const prices = document.createElement("p");
-  prices.style.margin = "5px 0";
+  title.textContent = "컴퓨존 870 EVO 용량별 혜택가";
+  const prices = document.createElement("div");
+  prices.style.cssText = "margin:5px 0;overflow-x:auto";
   const status = document.createElement("small");
   status.textContent = "게시된 혜택가를 확인하는 중입니다.";
   card.append(title, prices, status);
@@ -28,13 +28,32 @@
       return;
     }
     if (!response.ok) throw new Error();
-    const record = await response.json();
-    const observed = new Date(record.observed_at);
-    if (record.product_no !== "755256" || !validPrice(record.displayed_benefit_price_ex_vat_krw)
-        || !Number.isFinite(observed.getTime())) throw new Error();
-    prices.textContent = "판매가 " + displayWon(record.sale_price_ex_vat_krw)
-      + " · 표시 혜택가 " + displayWon(record.displayed_benefit_price_ex_vat_krw);
-    status.textContent = "부가세 별도 · 확인 " + clock.format(observed) + " KST · 상품 화면 표시가";
+    const data = await response.json();
+    const items = data.items ?? [{ ...data, capacity: "2TB" }];
+    const products = { "250GB": "755258", "500GB": "755259", "1TB": "755257",
+      "2TB": "755256", "4TB": "755255", "8TB": "1325879" };
+    const records = new Map(items.filter((item) => item && Object.hasOwn(products, item.capacity)
+      && item.product_no === products[item.capacity] && Number.isFinite(Date.parse(item.observed_at)))
+      .map((item) => [item.capacity, item]));
+    const table = document.createElement("table");
+    const head = table.createTHead().insertRow();
+    for (const titleText of ["용량", "판매가", "표시 혜택가", "확인 시각"]) {
+      const header = document.createElement("th");
+      header.scope = "col";
+      header.textContent = titleText;
+      head.append(header);
+    }
+    const body = table.createTBody();
+    for (const capacity of Object.keys(products)) {
+      const item = records.get(capacity);
+      const row = body.insertRow();
+      const values = [capacity, item ? displayWon(item.sale_price_ex_vat_krw) : "—",
+        item ? displayWon(item.displayed_benefit_price_ex_vat_krw) : "—",
+        item ? clock.format(new Date(item.observed_at)) : "—"];
+      for (const value of values) row.insertCell().textContent = value;
+    }
+    prices.append(table);
+    status.textContent = "부가세 별도 · 한국시간 · 상품 화면 표시가";
   }
 
   loadDealerPrice().catch(() => {
