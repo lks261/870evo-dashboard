@@ -3,42 +3,42 @@
     {
       "capacity": "250GB",
       "product_no": "755258",
-      "observed_at": "2026-11-26T07:54:08.250Z",
+      "observed_at": "2026-11-27T04:56:06.985Z",
       "sale_price_ex_vat_krw": 217273,
       "displayed_benefit_price_ex_vat_krw": 208182
     },
     {
       "capacity": "500GB",
       "product_no": "755259",
-      "observed_at": "2026-11-26T07:54:10.811Z",
+      "observed_at": "2026-11-27T04:56:09.546Z",
       "sale_price_ex_vat_krw": 320000,
       "displayed_benefit_price_ex_vat_krw": 260409
     },
     {
       "capacity": "1TB",
       "product_no": "755257",
-      "observed_at": "2026-11-26T07:54:13.370Z",
+      "observed_at": "2026-11-27T04:56:12.090Z",
       "sale_price_ex_vat_krw": 450000,
       "displayed_benefit_price_ex_vat_krw": 349773
     },
     {
       "capacity": "2TB",
       "product_no": "755256",
-      "observed_at": "2026-11-26T07:54:15.905Z",
+      "observed_at": "2026-11-27T04:56:14.644Z",
       "sale_price_ex_vat_krw": 1230000,
       "displayed_benefit_price_ex_vat_krw": 967600
     },
     {
       "capacity": "4TB",
       "product_no": "755255",
-      "observed_at": "2026-11-26T07:54:18.445Z",
+      "observed_at": "2026-11-27T04:56:17.201Z",
       "sale_price_ex_vat_krw": 2456364,
       "displayed_benefit_price_ex_vat_krw": 2357273
     },
     {
       "capacity": "8TB",
       "product_no": "1325879",
-      "observed_at": "2026-11-26T07:54:20.985Z",
+      "observed_at": "2026-11-27T04:56:19.763Z",
       "sale_price_ex_vat_krw": 4290909,
       "displayed_benefit_price_ex_vat_krw": 4119091
     }
